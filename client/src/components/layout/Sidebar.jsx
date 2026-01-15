@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getTodayEvents, getEvents } from '../../services/calendarService';
 import { formatTime, isToday } from '../../utils/timeUtils';
 
-export default function Sidebar() {
+export default function Sidebar({ isMobile = false }) {
   const { isAuthenticated } = useAuth();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,8 +68,12 @@ export default function Sidebar() {
   const scheduledHours = Math.floor(totalScheduledMinutes / 60);
   const scheduledMinutes = Math.round(totalScheduledMinutes % 60);
 
+  const baseClasses = isMobile
+    ? "flex-1 bg-gray-50 flex flex-col h-full overflow-hidden"
+    : "w-80 bg-gray-50 border-r border-gray-200 flex flex-col";
+
   return (
-    <aside className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col">
+    <aside className={baseClasses}>
       {/* Date Navigation */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-2">
