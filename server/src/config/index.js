@@ -19,5 +19,12 @@ export const config = {
       'https://www.googleapis.com/auth/calendar.events'
     ]
   },
+  db: {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    name: process.env.DB_NAME
+  },
+  adminEmail: process.env.ADMIN_EMAIL,
   dataPath: join(__dirname, '../../data')
 };

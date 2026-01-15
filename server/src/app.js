@@ -9,6 +9,7 @@ import taskRoutes from './routes/tasks.js';
 import calendarRoutes from './routes/calendar.js';
 import preferencesRoutes from './routes/preferences.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { testConnection } from './services/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,8 +30,12 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/preferences', preferencesRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get('/api/health', async (req, res) => {
+  const dbConnected = await testConnection();
+  res.json({
+    status: 'ok',
+    database: dbConnected ? 'connected' : 'disconnected'
+  });
 });
 
 // Serve static frontend in production
