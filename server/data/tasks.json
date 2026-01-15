@@ -1,0 +1,201 @@
+{
+  "tasks": [
+    {
+      "id": "e7234995-76a5-4bb0-8188-44fe360fabe6",
+      "name": "Update Rainey Donors on Home Page per Jordan Request",
+      "estimatedDuration": 30,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "75caedc0-d9e9-4b05-a754-cc903f7ed030",
+          "calendarEventId": "2snt4pqeusipq0l5j5q8mj5jjk",
+          "startTime": "2026-01-13T18:52:28.676Z",
+          "endTime": "2026-01-13T19:22:28.676Z",
+          "duration": 30,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-13T18:20:10.326Z",
+      "updatedAt": "2026-01-13T18:53:39.238Z"
+    },
+    {
+      "id": "d3a010ae-ae15-4cad-9fa6-1239d4bc5437",
+      "name": "Rainey - Audit Current website.",
+      "estimatedDuration": 180,
+      "sessionPreference": 60,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "416b28d5-d18c-4dfc-89c2-f367b5b29571",
+          "calendarEventId": "qu97q1v47bcev2d6iltth3k2t0",
+          "startTime": "2026-01-13T19:22:28.000Z",
+          "endTime": "2026-01-13T19:59:28.000Z",
+          "duration": 37,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "171334ba-84f0-4e90-b92a-ccf3a5c9e035",
+          "calendarEventId": "1351iiooilark3oqp740e1ppgc",
+          "startTime": "2026-01-13T21:30:00.000Z",
+          "endTime": "2026-01-13T22:00:00.000Z",
+          "duration": 30,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "98b940bf-d907-4c01-8d2b-bf88940bee57",
+          "calendarEventId": "0cmf45ug18kcbnlghka89mc99s",
+          "startTime": "2026-01-14T14:00:00.000Z",
+          "endTime": "2026-01-14T15:53:00.000Z",
+          "duration": 113,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-13T19:05:25.641Z",
+      "updatedAt": "2026-01-13T19:06:14.487Z"
+    },
+    {
+      "id": "07567dcf-404d-43c2-b65b-2f2aa6fbcdfd",
+      "name": "marketing",
+      "estimatedDuration": 10,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "185400f4-edb2-4774-b7bd-3f8d745f39da",
+          "calendarEventId": "rgm4liov8oua4f3f92jfads47c",
+          "startTime": "2026-01-14T15:53:00.000Z",
+          "endTime": "2026-01-14T17:53:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-13T20:29:57.939Z",
+      "updatedAt": "2026-01-13T20:29:58.496Z"
+    },
+    {
+      "id": "dbd15da5-06c6-40b0-a421-041a044bcfcd",
+      "name": "Help John Ross Move desk",
+      "estimatedDuration": 90,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "6b988365-eb01-47ff-89a9-b3a16362a2c2",
+          "calendarEventId": "fbbg2pf7ftdeddiir55c1t44dc",
+          "startTime": "2026-01-14T17:53:00.000Z",
+          "endTime": "2026-01-14T19:23:00.000Z",
+          "duration": 90,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-13T22:53:02.144Z",
+      "updatedAt": "2026-01-13T22:53:02.782Z"
+    },
+    {
+      "id": "25f65d6c-2be3-4ce2-80cd-0a1f44be3660",
+      "name": "Build Reid Wiley Website",
+      "estimatedDuration": 720,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "b63b9bb6-a078-4c47-b279-22acbd2273e9",
+          "calendarEventId": "p6f6fbj32m2o4bnplaav4mlkq8",
+          "startTime": "2026-01-14T19:23:00.000Z",
+          "endTime": "2026-01-14T21:23:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "39c70184-5851-4df2-9e77-a18af93ff31e",
+          "calendarEventId": "6l179g6u6vna9v41o81m0bnb60",
+          "startTime": "2026-01-15T14:00:00.000Z",
+          "endTime": "2026-01-15T16:00:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "21d7c538-e6cc-44f7-8fcd-50deb6906c8b",
+          "calendarEventId": "nm8icili0m4elrr2952jvh631o",
+          "startTime": "2026-01-16T14:30:00.000Z",
+          "endTime": "2026-01-16T16:30:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "cbd0e37c-d645-40e4-a464-c5dd16dc1f7b",
+          "calendarEventId": "ctebctcrq71e5gh2d16iqplpvc",
+          "startTime": "2026-01-17T14:00:00.000Z",
+          "endTime": "2026-01-17T16:00:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "6962b593-048d-424e-812e-7f33ceabd0d9",
+          "calendarEventId": "8k4rpjs9ihj1aqpv05u52if45o",
+          "startTime": "2026-01-18T14:00:00.000Z",
+          "endTime": "2026-01-18T16:00:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "2981f6a7-1b9e-479a-a9ce-8690bd91f755",
+          "calendarEventId": "ora8130gua7t4tfnmhk4rjo3g4",
+          "startTime": "2026-01-19T14:00:00.000Z",
+          "endTime": "2026-01-19T16:00:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-13T22:53:59.340Z",
+      "updatedAt": "2026-01-13T22:54:03.299Z"
+    },
+    {
+      "id": "8b2bf392-ef74-4500-ba0e-7908e59e0833",
+      "name": "Do monthly posts for Rainey",
+      "estimatedDuration": 60,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "ddb3e092-d0f2-4329-a56d-45e3408b8376",
+          "calendarEventId": "tjnkn2lnd3o296bqgbdlm7r1ms",
+          "startTime": "2026-01-14T14:00:00.000Z",
+          "endTime": "2026-01-14T15:00:00.000Z",
+          "duration": 60,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-14T01:07:22.910Z",
+      "updatedAt": "2026-01-14T01:07:23.420Z"
+    },
+    {
+      "id": "0dbe2269-3a9a-4a7a-b5ce-a8e13169c48e",
+      "name": "Update ATG Website",
+      "estimatedDuration": 240,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "0c286f6e-07db-40b4-b6fd-3ef0b0ca8f97",
+          "calendarEventId": "3jst58v66ehipvkj0q4n2cjd1g",
+          "startTime": "2026-01-14T15:00:00.000Z",
+          "endTime": "2026-01-14T17:00:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "40e107dd-683d-4af6-9f6d-f7a02bff26f8",
+          "calendarEventId": "67m7ho90a4usiuegipqdoqoogg",
+          "startTime": "2026-01-15T14:00:00.000Z",
+          "endTime": "2026-01-15T16:00:00.000Z",
+          "duration": 120,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-01-14T01:59:29.575Z",
+      "updatedAt": "2026-01-14T01:59:30.711Z"
+    }
+  ]
+}
