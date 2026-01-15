@@ -25,6 +25,11 @@ export const config = {
     password: process.env.DB_PASSWORD,
     name: process.env.DB_NAME
   },
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    anonKey: process.env.SUPABASE_ANON_KEY,
+    serviceKey: process.env.SUPABASE_SERVICE_KEY
+  },
   adminEmail: process.env.ADMIN_EMAIL,
   dataPath: join(__dirname, '../../data')
 };

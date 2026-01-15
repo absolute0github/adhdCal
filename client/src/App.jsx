@@ -1,36 +1,40 @@
-import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
 import MainLayout from './components/layout/MainLayout';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
 
-function App() {
-  const [searchParams, setSearchParams] = useSearchParams();
+function AppContent() {
+  const { isAuthenticated, isLoading } = useAuth();
 
-  useEffect(() => {
-    // Handle auth callback
-    const authStatus = searchParams.get('auth');
-    if (authStatus) {
-      // Clear the URL params
-      setSearchParams({});
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-      if (authStatus === 'success') {
-        console.log('Authentication successful');
-      } else if (authStatus === 'error') {
-        const message = searchParams.get('message');
-        console.error('Authentication error:', message);
-      }
-    }
-  }, [searchParams, setSearchParams]);
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   return (
+    <TaskProvider>
+      <MainLayout>
+        <Dashboard />
+      </MainLayout>
+    </TaskProvider>
+  );
+}
+
+function App() {
+  return (
     <AuthProvider>
-      <TaskProvider>
-        <MainLayout>
-          <Dashboard />
-        </MainLayout>
-      </TaskProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

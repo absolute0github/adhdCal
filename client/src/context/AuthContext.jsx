@@ -1,51 +1,131 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { checkAuthStatus, logout as logoutApi, getLoginUrl } from '../services/authService';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
 
-  const checkAuth = useCallback(async () => {
+  // Check Google Calendar connection status
+  const checkGoogleCalendar = useCallback(async (accessToken) => {
+    if (!accessToken) {
+      setGoogleCalendarConnected(false);
+      return;
+    }
     try {
-      setIsLoading(true);
-      const status = await checkAuthStatus();
-      setIsAuthenticated(status.authenticated);
-      setError(null);
-    } catch (err) {
-      setIsAuthenticated(false);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+      const response = await fetch('/api/auth/status', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const data = await response.json();
+      setGoogleCalendarConnected(data.googleConnected || false);
+    } catch {
+      setGoogleCalendarConnected(false);
     }
   }, []);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.access_token) {
+        checkGoogleCalendar(session.access_token);
+      }
+      setIsLoading(false);
+    });
 
-  const login = () => {
-    window.location.href = getLoginUrl();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.access_token) {
+          checkGoogleCalendar(session.access_token);
+        } else {
+          setGoogleCalendarConnected(false);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [checkGoogleCalendar]);
+
+  // Sign in with Google (Supabase auth, not calendar)
+  const signInWithGoogle = async () => {
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) setError(error.message);
   };
 
-  const logout = async () => {
-    try {
-      await logoutApi();
-      setIsAuthenticated(false);
-    } catch (err) {
-      setError(err.message);
-    }
+  // Sign in with email/password
+  const signInWithEmail = async (email, password) => {
+    setError(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) setError(error.message);
+    return { error };
+  };
+
+  // Sign up with email/password
+  const signUpWithEmail = async (email, password, displayName) => {
+    setError(null);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: displayName
+        }
+      }
+    });
+    if (error) setError(error.message);
+    return { error };
+  };
+
+  // Sign out
+  const signOut = async () => {
+    setError(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) setError(error.message);
+    setGoogleCalendarConnected(false);
+  };
+
+  // Connect Google Calendar (separate OAuth flow)
+  const connectGoogleCalendar = () => {
+    // Redirect to our backend's Google Calendar OAuth
+    window.location.href = '/api/auth/google/connect';
+  };
+
+  // Get access token for API calls
+  const getAccessToken = () => {
+    return session?.access_token;
   };
 
   const value = {
-    isAuthenticated,
+    user,
+    session,
+    isAuthenticated: !!user,
     isLoading,
     error,
-    login,
-    logout,
-    checkAuth
+    googleCalendarConnected,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    signOut,
+    connectGoogleCalendar,
+    getAccessToken
   };
 
   return (
