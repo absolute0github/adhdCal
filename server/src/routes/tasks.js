@@ -116,9 +116,12 @@ router.post('/:id/schedule', authMiddleware, async (req, res, next) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    const result = await scheduleTask(req.params.id, slots, sessionPreference);
+    const result = await scheduleTask(req.params.id, slots, sessionPreference, req.user?.id);
     res.json(result);
   } catch (error) {
+    if (error.message === 'Google Calendar not connected') {
+      return res.status(403).json({ error: error.message, code: 'GOOGLE_NOT_CONNECTED' });
+    }
     next(error);
   }
 });
@@ -126,11 +129,14 @@ router.post('/:id/schedule', authMiddleware, async (req, res, next) => {
 // Unschedule a session
 router.delete('/:id/sessions/:sessionId', authMiddleware, async (req, res, next) => {
   try {
-    const result = await unscheduleSession(req.params.id, req.params.sessionId);
+    const result = await unscheduleSession(req.params.id, req.params.sessionId, req.user?.id);
     res.json(result);
   } catch (error) {
     if (error.message.includes('not found')) {
       return res.status(404).json({ error: error.message });
+    }
+    if (error.message === 'Google Calendar not connected') {
+      return res.status(403).json({ error: error.message, code: 'GOOGLE_NOT_CONNECTED' });
     }
     next(error);
   }

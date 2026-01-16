@@ -25,7 +25,7 @@ async function writeJsonFile(filePath, data) {
   await writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-// Token operations
+// Token operations (legacy - global tokens)
 export async function getTokens() {
   return readJsonFile(TOKENS_FILE, null);
 }
@@ -38,6 +38,37 @@ export async function clearTokens() {
   if (existsSync(TOKENS_FILE)) {
     await writeFile(TOKENS_FILE, '', 'utf-8');
   }
+}
+
+// User-specific token operations
+const USER_TOKENS_FILE = join(config.dataPath, 'user-tokens.json');
+
+export async function getUserTokens(userId) {
+  if (!userId) {
+    // Fallback to legacy global tokens for anonymous users
+    return getTokens();
+  }
+  const allTokens = await readJsonFile(USER_TOKENS_FILE, {});
+  return allTokens[userId] || null;
+}
+
+export async function saveUserTokens(userId, tokens) {
+  if (!userId) {
+    // Fallback to legacy global tokens for anonymous users
+    return saveTokens(tokens);
+  }
+  const allTokens = await readJsonFile(USER_TOKENS_FILE, {});
+  allTokens[userId] = tokens;
+  await writeJsonFile(USER_TOKENS_FILE, allTokens);
+}
+
+export async function clearUserTokens(userId) {
+  if (!userId) {
+    return clearTokens();
+  }
+  const allTokens = await readJsonFile(USER_TOKENS_FILE, {});
+  delete allTokens[userId];
+  await writeJsonFile(USER_TOKENS_FILE, allTokens);
 }
 
 // Task operations

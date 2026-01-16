@@ -156,17 +156,17 @@ export function splitTaskIntoSessions(task, availableSlots, sessionLength) {
 }
 
 // Schedule a task by creating calendar events
-export async function scheduleTask(taskId, slots, sessionPreference) {
+export async function scheduleTask(taskId, slots, sessionPreference, userId = null) {
   const task = await getTaskById(taskId);
   if (!task) {
     throw new Error('Task not found');
   }
 
   const preferences = await getPreferences();
-  const client = await getAuthenticatedClient();
+  const client = await getAuthenticatedClient(userId);
 
   if (!client) {
-    throw new Error('Not authenticated');
+    throw new Error('Google Calendar not connected');
   }
 
   const sessionLength = sessionPreference || preferences.defaultSessionLength;
@@ -217,7 +217,7 @@ export async function scheduleTask(taskId, slots, sessionPreference) {
 }
 
 // Unschedule a session (delete from calendar and task)
-export async function unscheduleSession(taskId, sessionId) {
+export async function unscheduleSession(taskId, sessionId, userId = null) {
   const task = await getTaskById(taskId);
   if (!task) {
     throw new Error('Task not found');
@@ -228,9 +228,9 @@ export async function unscheduleSession(taskId, sessionId) {
     throw new Error('Session not found');
   }
 
-  const client = await getAuthenticatedClient();
+  const client = await getAuthenticatedClient(userId);
   if (!client) {
-    throw new Error('Not authenticated');
+    throw new Error('Google Calendar not connected');
   }
 
   // Delete from Google Calendar

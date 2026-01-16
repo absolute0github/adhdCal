@@ -21,7 +21,10 @@ const router = Router();
 // Get events for a date range
 router.get('/events', authMiddleware, async (req, res, next) => {
   try {
-    const client = await getAuthenticatedClient();
+    const client = await getAuthenticatedClient(req.user?.id);
+    if (!client) {
+      return res.status(403).json({ error: 'Google Calendar not connected', code: 'GOOGLE_NOT_CONNECTED' });
+    }
     const { start, end } = req.query;
 
     const timeMin = start ? parseISO(start) : startOfDay(new Date());
@@ -49,7 +52,10 @@ router.get('/events', authMiddleware, async (req, res, next) => {
 // Get today's events (for sidebar)
 router.get('/events/today', authMiddleware, async (req, res, next) => {
   try {
-    const client = await getAuthenticatedClient();
+    const client = await getAuthenticatedClient(req.user?.id);
+    if (!client) {
+      return res.status(403).json({ error: 'Google Calendar not connected', code: 'GOOGLE_NOT_CONNECTED' });
+    }
     const now = new Date();
 
     const events = await listEvents(client, startOfDay(now), endOfDay(now));
@@ -73,7 +79,10 @@ router.get('/events/today', authMiddleware, async (req, res, next) => {
 // Get available time slots
 router.get('/available-slots', authMiddleware, async (req, res, next) => {
   try {
-    const client = await getAuthenticatedClient();
+    const client = await getAuthenticatedClient(req.user?.id);
+    if (!client) {
+      return res.status(403).json({ error: 'Google Calendar not connected', code: 'GOOGLE_NOT_CONNECTED' });
+    }
     const preferences = await getPreferences();
 
     const { start, end, minDuration } = req.query;
@@ -100,7 +109,10 @@ router.get('/available-slots', authMiddleware, async (req, res, next) => {
 // Create a calendar event
 router.post('/events', authMiddleware, async (req, res, next) => {
   try {
-    const client = await getAuthenticatedClient();
+    const client = await getAuthenticatedClient(req.user?.id);
+    if (!client) {
+      return res.status(403).json({ error: 'Google Calendar not connected', code: 'GOOGLE_NOT_CONNECTED' });
+    }
     const preferences = await getPreferences();
 
     const { summary, description, startTime, endTime } = req.body;
@@ -126,7 +138,10 @@ router.post('/events', authMiddleware, async (req, res, next) => {
 // Delete a calendar event
 router.delete('/events/:eventId', authMiddleware, async (req, res, next) => {
   try {
-    const client = await getAuthenticatedClient();
+    const client = await getAuthenticatedClient(req.user?.id);
+    if (!client) {
+      return res.status(403).json({ error: 'Google Calendar not connected', code: 'GOOGLE_NOT_CONNECTED' });
+    }
     await deleteEvent(client, req.params.eventId);
     res.json({ success: true });
   } catch (error) {

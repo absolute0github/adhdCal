@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { config } from '../config/index.js';
-import { getTokens, saveTokens } from './storageService.js';
+import { getTokens, saveTokens, getUserTokens, saveUserTokens } from './storageService.js';
 
 // Create OAuth2 client
 export function createOAuth2Client() {
@@ -12,12 +12,16 @@ export function createOAuth2Client() {
 }
 
 // Generate auth URL for user consent
-export function getAuthUrl(oauth2Client) {
-  return oauth2Client.generateAuthUrl({
+export function getAuthUrl(oauth2Client, state = null) {
+  const options = {
     access_type: 'offline',
     scope: config.google.scopes,
     prompt: 'consent'
-  });
+  };
+  if (state) {
+    options.state = state;
+  }
+  return oauth2Client.generateAuthUrl(options);
 }
 
 // Exchange auth code for tokens
@@ -27,9 +31,9 @@ export async function getTokensFromCode(oauth2Client, code) {
   return tokens;
 }
 
-// Get authenticated client with valid tokens
-export async function getAuthenticatedClient() {
-  const tokens = await getTokens();
+// Get authenticated client with valid tokens (user-specific)
+export async function getAuthenticatedClient(userId = null) {
+  const tokens = userId ? await getUserTokens(userId) : await getTokens();
   if (!tokens) {
     return null;
   }
@@ -42,7 +46,12 @@ export async function getAuthenticatedClient() {
   if (tokens.expiry_date && tokens.expiry_date - Date.now() < expiryBuffer) {
     try {
       const { credentials } = await oauth2Client.refreshAccessToken();
-      await saveTokens(credentials);
+      // Save refreshed tokens for the user
+      if (userId) {
+        await saveUserTokens(userId, credentials);
+      } else {
+        await saveTokens(credentials);
+      }
       oauth2Client.setCredentials(credentials);
     } catch (error) {
       console.error('Token refresh failed:', error);
