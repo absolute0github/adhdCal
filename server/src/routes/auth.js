@@ -77,4 +77,11 @@ router.post('/refresh', async (req, res, next) => {
   }
 });
 
+// Connect Google Calendar - redirect to Google OAuth consent screen
+router.get('/google/connect', (req, res) => {
+  const oauth2Client = createOAuth2Client();
+  const authUrl = getAuthUrl(oauth2Client);
+  res.redirect(authUrl);
+});
+
 export default router;
