@@ -5,10 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: 'timekit.io',
+    host: 'timekit.local',
     proxy: {
       '/api': {
-        target: 'http://timekit.io:3001',
+        target: 'http://timekit.local:3001',
         changeOrigin: true
       }
     }
