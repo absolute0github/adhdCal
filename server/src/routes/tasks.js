@@ -103,7 +103,7 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 // Schedule a task
-router.post('/:id/schedule', authMiddleware, async (req, res, next) => {
+router.post('/:id/schedule', async (req, res, next) => {
   try {
     const { slots, sessionPreference } = req.body;
 
@@ -124,7 +124,7 @@ router.post('/:id/schedule', authMiddleware, async (req, res, next) => {
 });
 
 // Unschedule a session
-router.delete('/:id/sessions/:sessionId', authMiddleware, async (req, res, next) => {
+router.delete('/:id/sessions/:sessionId', async (req, res, next) => {
   try {
     const result = await unscheduleSession(req.params.id, req.params.sessionId);
     res.json(result);

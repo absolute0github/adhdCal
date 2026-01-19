@@ -47,6 +47,7 @@ router.get('/status', async (req, res, next) => {
     const client = await getAuthenticatedClient();
     res.json({
       authenticated: !!client,
+      googleConnected: !!client,
       message: client ? 'Authenticated' : 'Not authenticated'
     });
   } catch (error) {

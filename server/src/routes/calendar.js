@@ -19,7 +19,7 @@ import { authMiddleware } from '../middleware/authMiddleware.js';
 const router = Router();
 
 // Get events for a date range
-router.get('/events', authMiddleware, async (req, res, next) => {
+router.get('/events', async (req, res, next) => {
   try {
     const client = await getAuthenticatedClient();
     const { start, end } = req.query;
@@ -47,7 +47,7 @@ router.get('/events', authMiddleware, async (req, res, next) => {
 });
 
 // Get today's events (for sidebar)
-router.get('/events/today', authMiddleware, async (req, res, next) => {
+router.get('/events/today', async (req, res, next) => {
   try {
     const client = await getAuthenticatedClient();
     const now = new Date();
@@ -71,7 +71,7 @@ router.get('/events/today', authMiddleware, async (req, res, next) => {
 });
 
 // Get available time slots
-router.get('/available-slots', authMiddleware, async (req, res, next) => {
+router.get('/available-slots', async (req, res, next) => {
   try {
     const client = await getAuthenticatedClient();
     const preferences = await getPreferences();
@@ -98,7 +98,7 @@ router.get('/available-slots', authMiddleware, async (req, res, next) => {
 });
 
 // Create a calendar event
-router.post('/events', authMiddleware, async (req, res, next) => {
+router.post('/events', async (req, res, next) => {
   try {
     const client = await getAuthenticatedClient();
     const preferences = await getPreferences();
@@ -124,7 +124,7 @@ router.post('/events', authMiddleware, async (req, res, next) => {
 });
 
 // Delete a calendar event
-router.delete('/events/:eventId', authMiddleware, async (req, res, next) => {
+router.delete('/events/:eventId', async (req, res, next) => {
   try {
     const client = await getAuthenticatedClient();
     await deleteEvent(client, req.params.eventId);
