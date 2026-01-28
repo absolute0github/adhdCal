@@ -7,7 +7,7 @@ Follow these steps to set up Google Calendar API access for the Task Scheduler a
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Click the project dropdown at the top of the page
 3. Click **"New Project"**
-4. Enter a project name (e.g., `google-task-scheduler`)
+4. Enter a project name (e.g., `task-scheduler`)
 5. Click **"Create"**
 6. Wait for the project to be created, then select it
 
@@ -24,12 +24,12 @@ Follow these steps to set up Google Calendar API access for the Task Scheduler a
 2. Select **"External"** user type (unless you have Google Workspace)
 3. Click **"Create"**
 4. Fill in the required fields:
-   - **App name**: `Google Task Scheduler`
+   - **App name**: `Task Scheduler`
    - **User support email**: Your email address
    - **Developer contact information**: Your email address
 5. Click **"Save and Continue"**
 
-### Add Scopes - click "Data Access" in the Sidebar
+### Add Scopes
 
 1. Click **"Add or Remove Scopes"**
 2. Find and select these scopes:
@@ -38,7 +38,7 @@ Follow these steps to set up Google Calendar API access for the Task Scheduler a
 3. Click **"Update"**
 4. Click **"Save and Continue"**
 
-### Add Test Users - click "Audience"
+### Add Test Users
 
 1. Click **"Add Users"**
 2. Enter your Google account email address

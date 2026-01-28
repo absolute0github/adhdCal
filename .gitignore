@@ -28,3 +28,4 @@ npm-debug.log*
 
 # Temporary files
 tmpclaude*
+server/src/data/tokens.json

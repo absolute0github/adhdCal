@@ -1,0 +1,10 @@
+{
+  "dailyWorkDuration": 480,
+  "maxSessionLength": 120,
+  "defaultSessionLength": 120,
+  "workingHours": {
+    "start": "09:00",
+    "end": "17:00"
+  },
+  "timezone": "America/New_York"
+}
