@@ -5,10 +5,15 @@ import {
   getTaskById,
   createTask,
   updateTask,
-  deleteTask
+  deleteTask,
+  saveTasks
 } from '../services/storageService.js';
-import { scheduleTask, unscheduleSession } from '../services/schedulingService.js';
+import { findAvailableSlots, splitTaskIntoSessions, scheduleTask, unscheduleSession } from '../services/schedulingService.js';
+import { getAuthenticatedClient, getFreeBusy } from '../services/googleCalendarService.js';
+import { getPreferences } from '../services/storageService.js';
+import { startOfDay, endOfDay, addDays } from 'date-fns';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import { hasFeatureAccess, FREE_TIER_LIMITS } from '../services/supabaseAuth.js';
 
 const router = Router();
 
@@ -68,6 +73,83 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+// Batch create tasks (Brain Dump feature)
+router.post('/batch', authMiddleware, async (req, res, next) => {
+  try {
+    const { tasks: taskList } = req.body;
+    const user = req.user;
+
+    // Check if user has brain_dump feature access
+    if (!hasFeatureAccess(user, 'brain_dump')) {
+      return res.status(403).json({
+        error: 'Brain Dump is a Pro feature. Please upgrade to access this feature.'
+      });
+    }
+
+    // Validate input
+    if (!taskList || !Array.isArray(taskList) || taskList.length === 0) {
+      return res.status(400).json({ error: 'Tasks array is required and must not be empty' });
+    }
+
+    // Validate each task
+    for (let i = 0; i < taskList.length; i++) {
+      const task = taskList[i];
+      if (!task.name || typeof task.name !== 'string' || !task.name.trim()) {
+        return res.status(400).json({ error: `Task at index ${i} is missing a valid name` });
+      }
+      if (!task.estimatedDuration || typeof task.estimatedDuration !== 'number' || task.estimatedDuration <= 0) {
+        return res.status(400).json({ error: `Task at index ${i} is missing a valid estimatedDuration` });
+      }
+    }
+
+    // Check task limit for free users
+    const currentTasks = await getTasks();
+    const currentCount = currentTasks.length;
+
+    if (!hasFeatureAccess(user, 'unlimited_tasks')) {
+      const newTotal = currentCount + taskList.length;
+      if (newTotal > FREE_TIER_LIMITS.maxTasks) {
+        return res.status(403).json({
+          error: `Adding ${taskList.length} tasks would exceed your free tier limit of ${FREE_TIER_LIMITS.maxTasks} tasks. You currently have ${currentCount} tasks.`,
+          currentCount,
+          limit: FREE_TIER_LIMITS.maxTasks,
+          requestedCount: taskList.length
+        });
+      }
+    }
+
+    // Create all tasks
+    const createdTasks = [];
+    const now = new Date().toISOString();
+
+    for (const taskData of taskList) {
+      const task = {
+        id: uuidv4(),
+        name: taskData.name.trim(),
+        estimatedDuration: parseInt(taskData.estimatedDuration),
+        sessionPreference: taskData.sessionPreference ? parseInt(taskData.sessionPreference) : null,
+        status: 'backlog',
+        scheduledSessions: [],
+        createdAt: now,
+        updatedAt: now
+      };
+      createdTasks.push(task);
+    }
+
+    // Save all tasks at once
+    const allTasks = [...currentTasks, ...createdTasks];
+    await saveTasks(allTasks);
+
+    res.status(201).json({
+      success: true,
+      count: createdTasks.length,
+      tasks: createdTasks
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Update task
 router.put('/:id', async (req, res, next) => {
   try {
@@ -118,6 +200,56 @@ router.post('/:id/schedule', async (req, res, next) => {
 
     const result = await scheduleTask(req.params.id, slots, sessionPreference);
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Auto-schedule a task (find slots and schedule in one step)
+router.post('/:id/auto-schedule', async (req, res, next) => {
+  try {
+    const task = await getTaskById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const preferences = await getPreferences();
+    const client = await getAuthenticatedClient();
+    if (!client) {
+      return res.status(401).json({ error: 'Google Calendar not connected. Please connect your calendar first.' });
+    }
+
+    // Get free/busy data for the next 14 days
+    const timeMin = startOfDay(new Date());
+    const timeMax = endOfDay(addDays(new Date(), 14));
+    const busyPeriods = await getFreeBusy(client, timeMin, timeMax);
+
+    // Find available slots
+    const availableSlots = findAvailableSlots(
+      busyPeriods,
+      preferences,
+      { start: timeMin, end: timeMax }
+    );
+
+    if (availableSlots.length === 0) {
+      return res.status(409).json({ error: 'No available time slots found in the next 14 days.' });
+    }
+
+    // Split task into sessions that fit available slots
+    const sessionLength = task.sessionPreference || preferences.defaultSessionLength;
+    const { sessions, fullyScheduled } = splitTaskIntoSessions(task, availableSlots, sessionLength);
+
+    if (sessions.length === 0) {
+      return res.status(409).json({ error: 'Could not find suitable slots for this task.' });
+    }
+
+    // Schedule the sessions (creates calendar events)
+    const result = await scheduleTask(req.params.id, sessions, sessionLength);
+
+    res.json({
+      ...result,
+      fullyScheduled
+    });
   } catch (error) {
     next(error);
   }

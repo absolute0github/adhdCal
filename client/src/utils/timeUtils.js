@@ -48,6 +48,9 @@ export function parseDuration(input) {
 
 // Format minutes to human-readable string
 export function formatDuration(minutes) {
+  if (minutes == null || isNaN(minutes)) {
+    return '0m';
+  }
   if (minutes < 60) {
     return `${minutes}m`;
   }

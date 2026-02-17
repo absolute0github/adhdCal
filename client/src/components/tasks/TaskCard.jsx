@@ -1,14 +1,33 @@
-import { Calendar, Trash2, Edit2, Clock, X } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Trash2, Edit2, Clock, X, Zap } from 'lucide-react';
 import { formatDuration, formatDateTime } from '../../utils/timeUtils';
 
 export default function TaskCard({
   task,
   onSchedule,
+  onAutoSchedule,
   onDelete,
   onEdit,
   onUnscheduleSession,
   isAuthenticated
 }) {
+  const [autoScheduling, setAutoScheduling] = useState(false);
+  const [statusMsg, setStatusMsg] = useState(null);
+
+  async function handleAutoSchedule() {
+    setAutoScheduling(true);
+    setStatusMsg(null);
+    try {
+      const result = await onAutoSchedule(task.id);
+      setStatusMsg({ type: 'success', text: `Scheduled ${result.sessionsCreated} session(s)` });
+      setTimeout(() => setStatusMsg(null), 4000);
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: err.response?.data?.error || err.message });
+      setTimeout(() => setStatusMsg(null), 4000);
+    } finally {
+      setAutoScheduling(false);
+    }
+  }
   const totalScheduled = task.scheduledSessions?.reduce((sum, s) => sum + s.duration, 0) || 0;
   const remaining = task.estimatedDuration - totalScheduled;
 
@@ -73,13 +92,25 @@ export default function TaskCard({
 
         <div className="flex items-center gap-1">
           {isAuthenticated && (task.status === 'backlog' || task.status === 'partial') && (
-            <button
-              onClick={() => onSchedule(task)}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Schedule task"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
+            <>
+              <button
+                onClick={() => onSchedule(task)}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Schedule task"
+              >
+                <Calendar className="w-4 h-4" />
+              </button>
+              {onAutoSchedule && (
+                <button
+                  onClick={handleAutoSchedule}
+                  disabled={autoScheduling}
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                  title="Auto-schedule task"
+                >
+                  <Zap className="w-4 h-4" />
+                </button>
+              )}
+            </>
           )}
           <button
             onClick={() => onEdit(task)}
@@ -97,6 +128,11 @@ export default function TaskCard({
           </button>
         </div>
       </div>
+      {statusMsg && (
+        <p className={`mt-2 text-xs ${statusMsg.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+          {statusMsg.text}
+        </p>
+      )}
     </div>
   );
 }

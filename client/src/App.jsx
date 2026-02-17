@@ -1,8 +1,10 @@
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
 import MainLayout from './components/layout/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,7 +36,10 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Routes>
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="*" element={<AppContent />} />
+      </Routes>
     </AuthProvider>
   );
 }

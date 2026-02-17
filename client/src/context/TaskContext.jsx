@@ -64,6 +64,17 @@ export function TaskProvider({ children }) {
     }
   }, []);
 
+  const autoScheduleTask = useCallback(async (id) => {
+    try {
+      const result = await taskService.autoScheduleTask(id);
+      setTasks(prev => prev.map(t => t.id === id ? result.task : t));
+      return result;
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+      throw err;
+    }
+  }, []);
+
   const unscheduleSession = useCallback(async (taskId, sessionId) => {
     try {
       const result = await taskService.unscheduleSession(taskId, sessionId);
@@ -79,6 +90,9 @@ export function TaskProvider({ children }) {
   const backlogTasks = tasks.filter(t => t.status === 'backlog');
   const scheduledTasks = tasks.filter(t => t.status === 'scheduled' || t.status === 'partial');
 
+  // Alias for fetchTasks to refresh current task list
+  const refreshTasks = useCallback(() => fetchTasks(), [fetchTasks]);
+
   const value = {
     tasks,
     backlogTasks,
@@ -86,10 +100,12 @@ export function TaskProvider({ children }) {
     isLoading,
     error,
     fetchTasks,
+    refreshTasks,
     addTask,
     updateTask,
     removeTask,
     scheduleTask,
+    autoScheduleTask,
     unscheduleSession,
     clearError: () => setError(null)
   };

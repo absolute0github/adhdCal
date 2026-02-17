@@ -3,12 +3,17 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
+// Track PASSWORD_RECOVERY event globally so ResetPassword page can check it
+// even if the event fired before the component mounted
+export let passwordRecoveryDetected = false;
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
   // Check Google Calendar connection status
   const checkGoogleCalendar = useCallback(async (accessToken) => {
@@ -27,14 +32,40 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Fetch user profile with subscription info
+  const fetchUserProfile = useCallback(async (accessToken) => {
+    if (!accessToken) {
+      setUserProfile(null);
+      return;
+    }
+    try {
+      const response = await fetch('/api/auth/profile', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserProfile(data);
+      } else {
+        setUserProfile(null);
+      }
+    } catch {
+      setUserProfile(null);
+    }
+  }, []);
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession()
-      .then(({ data: { session } }) => {
+      .then(async ({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.access_token) {
-          checkGoogleCalendar(session.access_token);
+          // Wait for profile to load before marking as ready,
+          // so hasFeatureAccess works on first render
+          await Promise.all([
+            checkGoogleCalendar(session.access_token),
+            fetchUserProfile(session.access_token)
+          ]);
         }
         setIsLoading(false);
       })
@@ -46,19 +77,26 @@ export function AuthProvider({ children }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          passwordRecoveryDetected = true;
+        }
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.access_token) {
-          checkGoogleCalendar(session.access_token);
+          await Promise.all([
+            checkGoogleCalendar(session.access_token),
+            fetchUserProfile(session.access_token)
+          ]);
         } else {
           setGoogleCalendarConnected(false);
+          setUserProfile(null);
         }
         setIsLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [checkGoogleCalendar]);
+  }, [checkGoogleCalendar, fetchUserProfile]);
 
   // Sign in with Google (Supabase auth, not calendar)
   const signInWithGoogle = async () => {
@@ -105,7 +143,17 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.signOut();
     if (error) setError(error.message);
     setGoogleCalendarConnected(false);
+    setUserProfile(null);
   };
+
+  // Check if user has access to a premium feature
+  const hasFeatureAccess = (feature) => {
+    if (!userProfile) return false;
+    return userProfile.featureAccess?.[feature] ?? false;
+  };
+
+  // Check if user is premium
+  const isPremium = userProfile?.isPremium ?? false;
 
   // Connect Google Calendar (separate OAuth flow)
   const connectGoogleCalendar = () => {
@@ -125,6 +173,9 @@ export function AuthProvider({ children }) {
     isLoading,
     error,
     googleCalendarConnected,
+    userProfile,
+    isPremium,
+    hasFeatureAccess,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,

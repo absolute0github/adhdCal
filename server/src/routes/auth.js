@@ -7,6 +7,8 @@ import {
   getAuthenticatedClient
 } from '../services/googleCalendarService.js';
 import { saveTokens, clearTokens, getTokens } from '../services/storageService.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { hasFeatureAccess, FREE_TIER_LIMITS } from '../services/supabaseAuth.js';
 
 const router = Router();
 
@@ -83,6 +85,48 @@ router.get('/google/connect', (req, res) => {
   const oauth2Client = createOAuth2Client();
   const authUrl = getAuthUrl(oauth2Client);
   res.redirect(authUrl);
+});
+
+// Get user profile with subscription info and feature access
+router.get('/profile', authMiddleware, async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    // Build feature access map
+    const premiumFeatureList = [
+      'brain_dump',
+      'unlimited_tasks',
+      'extended_scheduling',
+      'multiple_calendars',
+      'sms_reminders',
+      'analytics',
+      'custom_themes'
+    ];
+
+    const featureAccess = {};
+    for (const feature of premiumFeatureList) {
+      featureAccess[feature] = hasFeatureAccess(user, feature);
+    }
+
+    const isPremium = user.role === 'admin' ||
+      (user.subscription_tier === 'premium' &&
+        (!user.subscription_expires_at || new Date(user.subscription_expires_at) >= new Date()));
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      displayName: user.display_name,
+      avatarUrl: user.avatar_url,
+      role: user.role,
+      subscriptionTier: user.subscription_tier || 'free',
+      subscriptionExpiresAt: user.subscription_expires_at,
+      isPremium,
+      featureAccess,
+      limits: isPremium ? null : FREE_TIER_LIMITS
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

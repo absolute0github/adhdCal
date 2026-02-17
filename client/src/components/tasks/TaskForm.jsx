@@ -1,16 +1,24 @@
 import { useState } from 'react';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, Zap } from 'lucide-react';
 import { useTasks } from '../../context/TaskContext';
 import { useAuth } from '../../context/AuthContext';
 import { parseDuration, formatDuration } from '../../utils/timeUtils';
+import BrainDumpForm from './BrainDumpForm';
+import ProFeatureBadge from '../ui/ProFeatureBadge';
+import UpgradeModal from '../ui/UpgradeModal';
 
 export default function TaskForm({ onScheduleNew }) {
-  const { addTask } = useTasks();
-  const { isAuthenticated } = useAuth();
+  const { addTask, autoScheduleTask } = useTasks();
+  const { isAuthenticated, hasFeatureAccess } = useAuth();
+  const [mode, setMode] = useState('single'); // 'single' or 'brainDump'
   const [name, setName] = useState('');
   const [duration, setDuration] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const canUseBrainDump = hasFeatureAccess('brain_dump');
 
   async function handleSubmit(e, shouldSchedule = false) {
     e.preventDefault();
@@ -56,76 +64,179 @@ export default function TaskForm({ onScheduleNew }) {
     }
   }
 
+  async function handleAutoSchedule(e) {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
+    if (!name.trim()) {
+      setError('Please enter a task name');
+      return;
+    }
+
+    const durationMinutes = parseDuration(duration);
+    if (!durationMinutes || durationMinutes <= 0) {
+      setError('Please enter a valid duration (e.g., "2h", "90m", "1h 30m")');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const newTask = await addTask({
+        name: name.trim(),
+        estimatedDuration: durationMinutes
+      });
+      const result = await autoScheduleTask(newTask.id);
+      setSuccessMessage(`Scheduled ${result.sessionsCreated} session(s) for "${name.trim()}"`);
+      setName('');
+      setDuration('');
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   const parsedDuration = parseDuration(duration);
   const durationPreview = parsedDuration ? formatDuration(parsedDuration) : null;
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, false)} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Task</h2>
+    <>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Task</h2>
 
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="taskName" className="block text-sm font-medium text-gray-700 mb-1">
-            Task Name
-          </label>
-          <input
-            id="taskName"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="What do you want to accomplish?"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">
-            Estimated Duration
-          </label>
-          <div className="relative">
-            <input
-              id="duration"
-              type="text"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g., 2h, 90m, 1h 30m"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            />
-            {durationPreview && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                = {durationPreview}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
-
-        <div className="flex gap-3">
+        {/* Mode Toggle */}
+        <div className="flex gap-2 mb-6">
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            type="button"
+            onClick={() => setMode('single')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              mode === 'single'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
             <Plus className="w-4 h-4" />
-            Add to Backlog
+            Single Task
           </button>
 
-          {isAuthenticated && (
-            <button
-              type="button"
-              onClick={(e) => handleSubmit(e, true)}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              <Calendar className="w-4 h-4" />
-              Add & Schedule
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (canUseBrainDump) {
+                setMode('brainDump');
+              } else {
+                setShowUpgradeModal(true);
+              }
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              mode === 'brainDump'
+                ? 'bg-blue-600 text-white'
+                : canUseBrainDump
+                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <Zap className="w-4 h-4" />
+            Brain Dump
+            {!canUseBrainDump && <ProFeatureBadge className="ml-1" />}
+          </button>
         </div>
+
+        {mode === 'brainDump' ? (
+          <BrainDumpForm
+            onBack={() => setMode('single')}
+            onScheduleNew={onScheduleNew}
+          />
+        ) : (
+          <form onSubmit={(e) => handleSubmit(e, false)}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="taskName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Task Name
+                </label>
+                <input
+                  id="taskName"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="What do you want to accomplish?"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">
+                  Estimated Duration
+                </label>
+                <div className="relative">
+                  <input
+                    id="duration"
+                    type="text"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g., 2h, 90m, 1h 30m"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  />
+                  {durationPreview && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      = {durationPreview}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-600">{error}</p>
+              )}
+              {successMessage && (
+                <p className="text-sm text-green-600">{successMessage}</p>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add to Backlog
+                </button>
+
+                {isAuthenticated && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => handleSubmit(e, true)}
+                      disabled={isSubmitting}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Add & Schedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAutoSchedule}
+                      disabled={isSubmitting}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Add & Auto-Schedule
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </form>
+        )}
       </div>
-    </form>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        feature="Brain Dump Mode"
+      />
+    </>
   );
 }

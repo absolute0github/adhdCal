@@ -1,4 +1,4 @@
-import { verifyToken, syncUser, hasFeatureAccess, checkTaskLimit } from '../services/supabaseAuth.js';
+import { verifyToken, syncUser, hasFeatureAccess, checkTaskLimit, createFallbackUser } from '../services/supabaseAuth.js';
 import { getAuthenticatedClient } from '../services/googleCalendarService.js';
 import { taskQueries } from '../services/database.js';
 
@@ -19,7 +19,15 @@ export async function requireAuth(req, res, next) {
 
     const token = authHeader.split(' ')[1];
     const supabaseUser = await verifyToken(token);
-    const dbUser = await syncUser(supabaseUser);
+
+    // Try to sync with database, fallback to Supabase user if DB unavailable
+    let dbUser;
+    try {
+      dbUser = await syncUser(supabaseUser);
+    } catch (dbError) {
+      console.warn('Database sync failed, using fallback user:', dbError.message);
+      dbUser = createFallbackUser(supabaseUser);
+    }
 
     req.user = dbUser;
     req.supabaseUser = supabaseUser;
@@ -44,7 +52,16 @@ export async function optionalAuth(req, res, next) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       const supabaseUser = await verifyToken(token);
-      const dbUser = await syncUser(supabaseUser);
+
+      // Try to sync with database, fallback to Supabase user if DB unavailable
+      let dbUser;
+      try {
+        dbUser = await syncUser(supabaseUser);
+      } catch (dbError) {
+        console.warn('Database sync failed, using fallback user:', dbError.message);
+        dbUser = createFallbackUser(supabaseUser);
+      }
+
       req.user = dbUser;
       req.supabaseUser = supabaseUser;
     } else {

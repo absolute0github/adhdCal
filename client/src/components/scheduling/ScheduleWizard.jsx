@@ -5,8 +5,14 @@ import { useTasks } from '../../context/TaskContext';
 import { formatDuration, generateUUID } from '../../utils/timeUtils';
 import SessionPreferenceModal from './SessionPreferenceModal';
 
-export default function ScheduleWizard({ task, onClose }) {
+export default function ScheduleWizard({ task: taskProp, onClose }) {
   const { scheduleTask, addTask } = useTasks();
+
+  // Handle batch tasks from Brain Dump — schedule the first task
+  const task = taskProp.isBatch && taskProp.tasks?.length > 0
+    ? taskProp.tasks[0]
+    : taskProp;
+
   const [step, setStep] = useState('loading'); // loading, session-preference, slot-selection, scheduling, done
   const [slots, setSlots] = useState([]);
   const [selectedSlots, setSelectedSlots] = useState([]);
@@ -15,14 +21,16 @@ export default function ScheduleWizard({ task, onClose }) {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
+  const estimatedDuration = task.estimatedDuration || 0;
+
   // Determine if we need to show session preference (task > 2 hours)
-  const needsSessionPreference = task.estimatedDuration > 120;
+  const needsSessionPreference = estimatedDuration > 120;
 
   useEffect(() => {
     if (needsSessionPreference) {
       setStep('session-preference');
     } else {
-      fetchSlots(task.estimatedDuration);
+      fetchSlots(estimatedDuration);
     }
   }, [task]);
 
@@ -47,7 +55,7 @@ export default function ScheduleWizard({ task, onClose }) {
 
   function preselectSlots(availableSlots) {
     const selected = [];
-    let remainingDuration = task.estimatedDuration;
+    let remainingDuration = estimatedDuration;
 
     for (const slot of availableSlots) {
       if (remainingDuration <= 0) break;
@@ -75,7 +83,7 @@ export default function ScheduleWizard({ task, onClose }) {
 
   function handleSessionPreference(length) {
     setSessionLength(length);
-    fetchSlots(Math.min(length, task.estimatedDuration));
+    fetchSlots(Math.min(length, estimatedDuration));
   }
 
   function toggleSlotSelection(slot, forceAdd = false) {
@@ -89,7 +97,7 @@ export default function ScheduleWizard({ task, onClose }) {
         // Add slot - calculate remaining based on current selection
         const alreadyScheduled = task.scheduledSessions?.reduce((sum, s) => sum + s.duration, 0) || 0;
         const selectedDuration = prev.reduce((sum, s) => sum + s.duration, 0);
-        const remainingToSchedule = task.estimatedDuration - alreadyScheduled - selectedDuration;
+        const remainingToSchedule = estimatedDuration - alreadyScheduled - selectedDuration;
 
         // Allow selecting even if we've covered the duration (user might want to pick different slots)
         const usableDuration = Math.min(slot.duration, sessionLength, Math.max(remainingToSchedule, slot.duration));
@@ -112,7 +120,7 @@ export default function ScheduleWizard({ task, onClose }) {
   function getRemainingToSchedule() {
     const alreadyScheduled = task.scheduledSessions?.reduce((sum, s) => sum + s.duration, 0) || 0;
     const selectedDuration = selectedSlots.reduce((sum, s) => sum + s.duration, 0);
-    const remaining = task.estimatedDuration - alreadyScheduled - selectedDuration;
+    const remaining = estimatedDuration - alreadyScheduled - selectedDuration;
     return remaining > 0 ? remaining : 0;
   }
 
@@ -132,7 +140,7 @@ export default function ScheduleWizard({ task, onClose }) {
       if (task.isNew) {
         taskToSchedule = await addTask({
           name: task.name,
-          estimatedDuration: task.estimatedDuration
+          estimatedDuration: estimatedDuration
         });
       }
 
@@ -148,7 +156,7 @@ export default function ScheduleWizard({ task, onClose }) {
   // Calculate totals
   const totalSelected = selectedSlots.reduce((sum, s) => sum + s.duration, 0);
   const alreadyScheduled = task.scheduledSessions?.reduce((sum, s) => sum + s.duration, 0) || 0;
-  const remaining = task.estimatedDuration - alreadyScheduled - totalSelected;
+  const remaining = estimatedDuration - alreadyScheduled - totalSelected;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -190,7 +198,7 @@ export default function ScheduleWizard({ task, onClose }) {
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-blue-700">
-                    <strong>{formatDuration(task.estimatedDuration)}</strong> total
+                    <strong>{formatDuration(estimatedDuration)}</strong> total
                     {alreadyScheduled > 0 && (
                       <span className="text-blue-600"> ({formatDuration(alreadyScheduled)} already scheduled)</span>
                     )}

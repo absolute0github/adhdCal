@@ -73,6 +73,24 @@ export async function syncUser(supabaseUser) {
 }
 
 /**
+ * Create a fallback user object from Supabase user when database is unavailable
+ */
+export function createFallbackUser(supabaseUser) {
+  const isAdmin = supabaseUser.email === config.adminEmail;
+  return {
+    id: null,
+    supabase_id: supabaseUser.id,
+    email: supabaseUser.email,
+    display_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0],
+    avatar_url: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
+    role: isAdmin ? 'admin' : 'user',
+    subscription_tier: isAdmin ? 'premium' : 'free',
+    subscription_expires_at: null,
+    isFallback: true
+  };
+}
+
+/**
  * Check if user has access to a premium feature
  */
 export function hasFeatureAccess(user, feature) {
@@ -83,6 +101,7 @@ export function hasFeatureAccess(user, feature) {
 
   // Define premium features
   const premiumFeatures = [
+    'brain_dump',
     'unlimited_tasks',
     'extended_scheduling',
     'multiple_calendars',

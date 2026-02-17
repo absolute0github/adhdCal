@@ -6,7 +6,7 @@ import TaskCard from './TaskCard';
 import EditTaskModal from './EditTaskModal';
 
 export default function TaskList({ onSchedule }) {
-  const { tasks, isLoading, error, fetchTasks, removeTask, updateTask, unscheduleSession } = useTasks();
+  const { tasks, isLoading, error, fetchTasks, removeTask, updateTask, autoScheduleTask, unscheduleSession } = useTasks();
   const { isAuthenticated } = useAuth();
   const [editingTask, setEditingTask] = useState(null);
 
@@ -88,6 +88,7 @@ export default function TaskList({ onSchedule }) {
                   key={task.id}
                   task={task}
                   onSchedule={onSchedule}
+                  onAutoSchedule={autoScheduleTask}
                   onDelete={handleDelete}
                   onEdit={setEditingTask}
                   onUnscheduleSession={handleUnscheduleSession}
@@ -112,6 +113,7 @@ export default function TaskList({ onSchedule }) {
                   key={task.id}
                   task={task}
                   onSchedule={onSchedule}
+                  onAutoSchedule={autoScheduleTask}
                   onDelete={handleDelete}
                   onEdit={setEditingTask}
                   onUnscheduleSession={handleUnscheduleSession}

@@ -38,3 +38,13 @@ export async function unscheduleSession(taskId, sessionId) {
   const response = await api.delete(`/tasks/${taskId}/sessions/${sessionId}`);
   return response.data;
 }
+
+export async function autoScheduleTask(id) {
+  const response = await api.post(`/tasks/${id}/auto-schedule`);
+  return response.data;
+}
+
+export async function createTasksBatch(tasks) {
+  const response = await api.post('/tasks/batch', { tasks });
+  return response.data;
+}
