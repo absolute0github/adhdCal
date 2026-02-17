@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Clock, Mail, Chrome, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Brain, Mail, Chrome, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -72,14 +73,14 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <Link to="/" className="flex items-center justify-center gap-3 mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Clock className="w-7 h-7 text-white" />
+            <Brain className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            TimeKit
+            ADHDCal
           </h1>
-        </div>
+        </Link>
 
         <h2 className="text-xl font-semibold text-center text-gray-800 mb-2">
           {isForgotPassword ? 'Reset password' : isSignUp ? 'Create your account' : 'Welcome back'}

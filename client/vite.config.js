@@ -5,10 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: 'timekit.local',
+    host: 'adhdcal.local',
     proxy: {
       '/api': {
-        target: 'http://timekit.local:3001',
+        target: 'http://adhdcal.local:3001',
         changeOrigin: true
       }
     }

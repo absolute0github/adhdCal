@@ -1,4 +1,4 @@
-import { Clock, LogOut, Calendar } from 'lucide-react';
+import { Brain, LogOut, Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Header() {
@@ -9,9 +9,9 @@ export default function Header() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
           <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Clock className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            <Brain className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </div>
-          <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">TimeKit</h1>
+          <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">ADHDCal</h1>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">

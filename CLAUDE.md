@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Timekit** is an ADHD-friendly calendar auto-scheduler that helps users manage tasks by automatically scheduling them into their calendar based on work preferences and availability. It integrates with Google Calendar and uses intelligent scheduling algorithms to break down tasks into manageable sessions.
+**ADHDCal** is an ADHD-friendly calendar auto-scheduler that helps users manage tasks by automatically scheduling them into their calendar based on work preferences and availability. It integrates with Google Calendar and uses intelligent scheduling algorithms to break down tasks into manageable sessions.
 
 ## Development Commands
 

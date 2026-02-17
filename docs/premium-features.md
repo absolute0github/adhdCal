@@ -1,4 +1,4 @@
-# TimeKit Premium Features
+# ADHDCal Premium Features
 
 ## Pricing Tiers
 

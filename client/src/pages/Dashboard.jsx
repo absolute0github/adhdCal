@@ -10,7 +10,7 @@ export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const [schedulingTask, setSchedulingTask] = useState(null);
   const [viewMode, setViewMode] = useState(
-    () => localStorage.getItem('timekit-view-mode') || 'list'
+    () => localStorage.getItem('adhdcal-view-mode') || 'list'
   );
 
   function handleSchedule(task) {
@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   function handleViewChange(mode) {
     setViewMode(mode);
-    localStorage.setItem('timekit-view-mode', mode);
+    localStorage.setItem('adhdcal-view-mode', mode);
   }
 
   return (

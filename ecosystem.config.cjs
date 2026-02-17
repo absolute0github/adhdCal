@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'timekit',
+    name: 'adhdcal',
     script: 'server/index.js',
     cwd: __dirname,
     instances: 1,

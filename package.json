@@ -1,5 +1,5 @@
 {
-  "name": "timekit",
+  "name": "adhdcal",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
@@ -13,9 +13,9 @@
     "build": "npm run build --workspace=client",
     "start": "node server/index.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",
-    "pm2:stop": "pm2 stop timekit",
-    "pm2:restart": "pm2 restart timekit",
-    "pm2:logs": "pm2 logs timekit",
+    "pm2:stop": "pm2 stop adhdcal",
+    "pm2:restart": "pm2 restart adhdcal",
+    "pm2:logs": "pm2 logs adhdcal",
     "pm2:status": "pm2 status"
   },
   "devDependencies": {

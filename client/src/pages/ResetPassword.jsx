@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Eye, EyeOff } from 'lucide-react';
+import { Brain, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { passwordRecoveryDetected } from '../context/AuthContext';
 
@@ -59,7 +59,7 @@ export default function ResetPassword() {
       if (error) {
         setError(error.message);
       } else {
-        navigate('/');
+        navigate('/app');
       }
     } catch {
       setError('Failed to reset password. Please try again.');
@@ -85,10 +85,10 @@ export default function ResetPassword() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Clock className="w-7 h-7 text-white" />
+            <Brain className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            TimeKit
+            ADHDCal
           </h1>
         </div>
 
