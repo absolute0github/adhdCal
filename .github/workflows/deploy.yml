@@ -15,4 +15,17 @@ jobs:
           host: ${{ secrets.CLOUDWAYS_HOST }}
           username: ${{ secrets.CLOUDWAYS_USER }}
           key: ${{ secrets.CLOUDWAYS_SSH_KEY }}
-          script: ~/deploy.sh
+          script_stop: true
+          command_timeout: 5m
+          script: |
+            REPO_DIR=~/adhdCal
+            if [ ! -d "$REPO_DIR/.git" ]; then
+              git clone https://github.com/absolute0github/adhdCal.git "$REPO_DIR"
+            fi
+            cd "$REPO_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+            npm install
+            npm run build
+            npx pm2 restart timekit 2>/dev/null || npx pm2 start ecosystem.config.cjs
