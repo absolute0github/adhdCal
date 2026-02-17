@@ -161,7 +161,13 @@ router.put('/:id', async (req, res, next) => {
     if (name !== undefined) updates.name = name;
     if (estimatedDuration !== undefined) updates.estimatedDuration = parseInt(estimatedDuration);
     if (sessionPreference !== undefined) updates.sessionPreference = sessionPreference ? parseInt(sessionPreference) : null;
-    if (status !== undefined) updates.status = status;
+    if (status !== undefined) {
+      const validStatuses = ['backlog', 'partial', 'scheduled', 'completed'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+      }
+      updates.status = status;
+    }
     if (complexity !== undefined) updates.complexity = Math.min(5, Math.max(1, parseInt(complexity)));
 
     const task = await updateTask(req.params.id, updates);

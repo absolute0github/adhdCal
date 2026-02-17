@@ -108,9 +108,19 @@ export function TaskProvider({ children }) {
     }
   }, [fetchTasks]);
 
+  const completeTask = useCallback(async (id) => {
+    return updateTask(id, { status: 'completed' });
+  }, [updateTask]);
+
+  const uncompleteTask = useCallback(async (id) => {
+    return updateTask(id, { status: 'backlog' });
+  }, [updateTask]);
+
   // Get tasks by status
   const backlogTasks = tasks.filter(t => t.status === 'backlog');
+  const partialTasks = tasks.filter(t => t.status === 'partial');
   const scheduledTasks = tasks.filter(t => t.status === 'scheduled' || t.status === 'partial');
+  const completedTasks = tasks.filter(t => t.status === 'completed');
 
   // Alias for fetchTasks to refresh current task list
   const refreshTasks = useCallback(() => fetchTasks(), [fetchTasks]);
@@ -118,7 +128,9 @@ export function TaskProvider({ children }) {
   const value = {
     tasks,
     backlogTasks,
+    partialTasks,
     scheduledTasks,
+    completedTasks,
     isLoading,
     error,
     fetchTasks,
@@ -131,6 +143,8 @@ export function TaskProvider({ children }) {
     autoScheduleTask,
     autoScheduleBatch,
     unscheduleSession,
+    completeTask,
+    uncompleteTask,
     clearError: () => setError(null)
   };
 

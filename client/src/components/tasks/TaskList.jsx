@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ListTodo, AlertCircle, CheckSquare, Trash2, Zap } from 'lucide-react';
+import { ListTodo, AlertCircle, CheckSquare, Trash2, Zap, CheckCircle } from 'lucide-react';
 import { useTasks } from '../../context/TaskContext';
 import { useAuth } from '../../context/AuthContext';
 import TaskCard from './TaskCard';
 import EditTaskModal from './EditTaskModal';
 
 export default function TaskList({ onSchedule }) {
-  const { tasks, isLoading, error, fetchTasks, removeTask, removeTasksBatch, updateTask, autoScheduleTask, autoScheduleBatch, unscheduleSession } = useTasks();
+  const { tasks, isLoading, error, fetchTasks, removeTask, removeTasksBatch, updateTask, autoScheduleTask, autoScheduleBatch, unscheduleSession, completeTask } = useTasks();
   const { isAuthenticated } = useAuth();
   const [editingTask, setEditingTask] = useState(null);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -98,9 +98,10 @@ export default function TaskList({ onSchedule }) {
     }
   }
 
-  // Separate backlog and scheduled/partial tasks
+  // Separate backlog, scheduled/partial, and completed tasks
   const backlogTasks = tasks.filter(t => t.status === 'backlog');
   const scheduledTasks = tasks.filter(t => t.status === 'scheduled' || t.status === 'partial');
+  const completedTasks = tasks.filter(t => t.status === 'completed');
 
   if (isLoading && tasks.length === 0) {
     return (
@@ -218,6 +219,7 @@ export default function TaskList({ onSchedule }) {
                   onAutoSchedule={autoScheduleTask}
                   onDelete={handleDelete}
                   onEdit={setEditingTask}
+                  onComplete={completeTask}
                   onUnscheduleSession={handleUnscheduleSession}
                   isAuthenticated={isAuthenticated}
                   selectionMode={selectionMode}
@@ -246,7 +248,32 @@ export default function TaskList({ onSchedule }) {
                   onAutoSchedule={autoScheduleTask}
                   onDelete={handleDelete}
                   onEdit={setEditingTask}
+                  onComplete={completeTask}
                   onUnscheduleSession={handleUnscheduleSession}
+                  isAuthenticated={isAuthenticated}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Completed Tasks Section */}
+        {completedTasks.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-purple-500" />
+              Completed
+              <span className="text-sm font-normal text-gray-400">({completedTasks.length})</span>
+            </h2>
+
+            <div className="space-y-3">
+              {completedTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onSchedule={onSchedule}
+                  onDelete={handleDelete}
+                  onEdit={setEditingTask}
                   isAuthenticated={isAuthenticated}
                 />
               ))}

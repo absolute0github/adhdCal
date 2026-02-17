@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Trash2, Edit2, Clock, X, Zap } from 'lucide-react';
+import { Calendar, Trash2, Edit2, Clock, X, Zap, CheckCircle } from 'lucide-react';
 import { formatDuration, formatDateTime } from '../../utils/timeUtils';
 
 const complexityColors = {
@@ -16,6 +16,7 @@ export default function TaskCard({
   onAutoSchedule,
   onDelete,
   onEdit,
+  onComplete,
   onUnscheduleSession,
   isAuthenticated,
   selectionMode,
@@ -45,14 +46,18 @@ export default function TaskCard({
   const statusColors = {
     backlog: 'bg-gray-100 text-gray-600',
     partial: 'bg-yellow-100 text-yellow-700',
-    scheduled: 'bg-green-100 text-green-700'
+    scheduled: 'bg-green-100 text-green-700',
+    completed: 'bg-purple-100 text-purple-700'
   };
 
   const statusLabels = {
     backlog: 'Backlog',
     partial: 'Partially Scheduled',
-    scheduled: 'Fully Scheduled'
+    scheduled: 'Fully Scheduled',
+    completed: 'Completed'
   };
+
+  const isCompleted = task.status === 'completed';
 
   return (
     <div className={`bg-white rounded-lg border p-4 hover:shadow-md transition-shadow ${isSelected ? 'border-blue-400 bg-blue-50/30' : 'border-gray-200'}`}>
@@ -67,7 +72,7 @@ export default function TaskCard({
             />
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 truncate">{task.name}</h3>
+            <h3 className={`font-medium truncate ${isCompleted ? 'line-through text-gray-400' : 'text-gray-900'}`}>{task.name}</h3>
             <div className="flex items-center gap-3 mt-2">
               <span className="flex items-center gap-1 text-sm text-gray-500">
                 <Clock className="w-4 h-4" />
@@ -117,6 +122,15 @@ export default function TaskCard({
         </div>
 
         <div className="flex items-center gap-1">
+          {onComplete && !isCompleted && (
+            <button
+              onClick={() => onComplete(task.id)}
+              className="p-2 text-purple-500 hover:bg-purple-50 rounded-lg transition-colors"
+              title="Mark complete"
+            >
+              <CheckCircle className="w-4 h-4" />
+            </button>
+          )}
           {isAuthenticated && (task.status === 'backlog' || task.status === 'partial') && (
             <>
               <button
