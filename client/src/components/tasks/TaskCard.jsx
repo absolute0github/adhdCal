@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { Calendar, Trash2, Edit2, Clock, X, Zap } from 'lucide-react';
 import { formatDuration, formatDateTime } from '../../utils/timeUtils';
 
+const complexityColors = {
+  1: 'bg-green-100 text-green-700',
+  2: 'bg-green-100 text-green-600',
+  3: 'bg-yellow-100 text-yellow-700',
+  4: 'bg-orange-100 text-orange-700',
+  5: 'bg-red-100 text-red-700',
+};
+
 export default function TaskCard({
   task,
   onSchedule,
@@ -9,7 +17,10 @@ export default function TaskCard({
   onDelete,
   onEdit,
   onUnscheduleSession,
-  isAuthenticated
+  isAuthenticated,
+  selectionMode,
+  isSelected,
+  onToggleSelect
 }) {
   const [autoScheduling, setAutoScheduling] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
@@ -44,19 +55,33 @@ export default function TaskCard({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-lg border p-4 hover:shadow-md transition-shadow ${isSelected ? 'border-blue-400 bg-blue-50/30' : 'border-gray-200'}`}>
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 truncate">{task.name}</h3>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="flex items-center gap-1 text-sm text-gray-500">
-              <Clock className="w-4 h-4" />
-              {formatDuration(task.estimatedDuration)}
-            </span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[task.status]}`}>
-              {statusLabels[task.status]}
-            </span>
-          </div>
+        <div className="flex-1 min-w-0 flex items-start gap-3">
+          {selectionMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggleSelect(task.id)}
+              className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gray-900 truncate">{task.name}</h3>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="flex items-center gap-1 text-sm text-gray-500">
+                <Clock className="w-4 h-4" />
+                {formatDuration(task.estimatedDuration)}
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[task.status]}`}>
+                {statusLabels[task.status]}
+              </span>
+              {task.complexity && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${complexityColors[task.complexity] || complexityColors[3]}`}>
+                  C{task.complexity}
+                </span>
+              )}
+            </div>
 
           {/* Show scheduled sessions */}
           {task.scheduledSessions && task.scheduledSessions.length > 0 && (
@@ -88,6 +113,7 @@ export default function TaskCard({
               )}
             </div>
           )}
+          </div>
         </div>
 
         <div className="flex items-center gap-1">

@@ -86,6 +86,28 @@ export function TaskProvider({ children }) {
     }
   }, []);
 
+  const removeTasksBatch = useCallback(async (ids) => {
+    try {
+      const result = await taskService.deleteTasksBatch(ids);
+      setTasks(prev => prev.filter(t => !ids.includes(t.id)));
+      return result;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  const autoScheduleBatch = useCallback(async (ids, easierFirst) => {
+    try {
+      const result = await taskService.autoScheduleBatch(ids, easierFirst);
+      await fetchTasks(); // Refresh to get updated statuses
+      return result;
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+      throw err;
+    }
+  }, [fetchTasks]);
+
   // Get tasks by status
   const backlogTasks = tasks.filter(t => t.status === 'backlog');
   const scheduledTasks = tasks.filter(t => t.status === 'scheduled' || t.status === 'partial');
@@ -104,8 +126,10 @@ export function TaskProvider({ children }) {
     addTask,
     updateTask,
     removeTask,
+    removeTasksBatch,
     scheduleTask,
     autoScheduleTask,
+    autoScheduleBatch,
     unscheduleSession,
     clearError: () => setError(null)
   };

@@ -5,6 +5,7 @@ import { parseDuration, formatDuration } from '../../utils/timeUtils';
 export default function EditTaskModal({ task, onSave, onClose }) {
   const [name, setName] = useState(task.name);
   const [duration, setDuration] = useState(formatDuration(task.estimatedDuration));
+  const [complexity, setComplexity] = useState(task.complexity || 3);
   const [error, setError] = useState(null);
 
   function handleSubmit(e) {
@@ -24,7 +25,8 @@ export default function EditTaskModal({ task, onSave, onClose }) {
 
     onSave(task.id, {
       name: name.trim(),
-      estimatedDuration: durationMinutes
+      estimatedDuration: durationMinutes,
+      complexity
     });
   }
 
@@ -67,6 +69,33 @@ export default function EditTaskModal({ task, onSave, onClose }) {
               placeholder="e.g., 2h, 90m"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Complexity
+            </label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map(level => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setComplexity(level)}
+                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                    complexity === level
+                      ? level <= 2 ? 'bg-green-500 text-white'
+                        : level === 3 ? 'bg-yellow-500 text-white'
+                        : 'bg-red-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+              <span className="ml-2 text-xs text-gray-400 self-center">
+                {complexity <= 2 ? 'Easy' : complexity === 3 ? 'Medium' : 'Hard'}
+              </span>
+            </div>
           </div>
 
           {error && (

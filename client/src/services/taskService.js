@@ -48,3 +48,13 @@ export async function createTasksBatch(tasks) {
   const response = await api.post('/tasks/batch', { tasks });
   return response.data;
 }
+
+export async function deleteTasksBatch(ids) {
+  const response = await api.delete('/tasks/batch', { data: { ids } });
+  return response.data;
+}
+
+export async function autoScheduleBatch(ids, easierFirst) {
+  const response = await api.post('/tasks/auto-schedule-batch', { ids, easierFirst });
+  return response.data;
+}

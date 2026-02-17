@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Calendar, Zap, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Zap, Trash2, AlertCircle, CheckCircle, Shuffle } from 'lucide-react';
 import { parseDuration, formatDuration } from '../../utils/timeUtils';
+import { generateRandomTaskNames } from '../../utils/taskGenerator';
 import { createTasksBatch } from '../../services/taskService';
 import { useTasks } from '../../context/TaskContext';
+
+const complexityColors = {
+  1: 'bg-green-500 text-white',
+  2: 'bg-green-500 text-white',
+  3: 'bg-yellow-500 text-white',
+  4: 'bg-red-500 text-white',
+  5: 'bg-red-500 text-white',
+};
 
 export default function BrainDumpForm({ onBack, onScheduleNew }) {
   const { refreshTasks, autoScheduleTask } = useTasks();
@@ -29,7 +38,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
       id: `temp-${index}`,
       name,
       duration: '',
-      durationMinutes: null
+      durationMinutes: null,
+      complexity: 3
     }));
 
     setParsedTasks(tasks);
@@ -52,6 +62,19 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
         return task;
       })
     );
+  }
+
+  // Update complexity for a specific task
+  function updateTaskComplexity(id, complexity) {
+    setParsedTasks(prev =>
+      prev.map(task => task.id === id ? { ...task, complexity } : task)
+    );
+  }
+
+  // Fill textarea with random task names
+  function fillWithRandomTasks() {
+    const names = generateRandomTaskNames(8);
+    setRawText(names.join('\n'));
   }
 
   // Remove a task from the list
@@ -77,7 +100,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
     try {
       const tasksToCreate = parsedTasks.map(task => ({
         name: task.name,
-        estimatedDuration: task.durationMinutes
+        estimatedDuration: task.durationMinutes,
+        complexity: task.complexity || 3
       }));
 
       await createTasksBatch(tasksToCreate);
@@ -107,7 +131,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
     try {
       const tasksToCreate = parsedTasks.map(task => ({
         name: task.name,
-        estimatedDuration: task.durationMinutes
+        estimatedDuration: task.durationMinutes,
+        complexity: task.complexity || 3
       }));
 
       const result = await createTasksBatch(tasksToCreate);
@@ -147,7 +172,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
     try {
       const tasksToCreate = parsedTasks.map(task => ({
         name: task.name,
-        estimatedDuration: task.durationMinutes
+        estimatedDuration: task.durationMinutes,
+        complexity: task.complexity || 3
       }));
 
       const result = await createTasksBatch(tasksToCreate);
@@ -299,6 +325,24 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
                 )}
               </div>
 
+              <div className="flex gap-0.5 flex-shrink-0">
+                {[1, 2, 3, 4, 5].map(level => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => updateTaskComplexity(task.id, level)}
+                    className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
+                      task.complexity === level
+                        ? complexityColors[level]
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
+                    title={`Complexity ${level}`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+
               <button
                 onClick={() => removeTask(task.id)}
                 className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
@@ -382,9 +426,19 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
           rows={8}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none font-mono text-sm"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          One task per line
-        </p>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-gray-500">
+            One task per line
+          </p>
+          <button
+            type="button"
+            onClick={fillWithRandomTasks}
+            className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-700 transition-colors"
+          >
+            <Shuffle className="w-3 h-3" />
+            Fill with random tasks
+          </button>
+        </div>
       </div>
 
       {error && (

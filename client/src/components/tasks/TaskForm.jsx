@@ -1,22 +1,27 @@
 import { useState } from 'react';
-import { Plus, Calendar, Zap } from 'lucide-react';
+import { Plus, Calendar, Zap, Shuffle } from 'lucide-react';
 import { useTasks } from '../../context/TaskContext';
 import { useAuth } from '../../context/AuthContext';
 import { parseDuration, formatDuration } from '../../utils/timeUtils';
+import { generateRandomTasks } from '../../utils/taskGenerator';
+import { createTasksBatch } from '../../services/taskService';
 import BrainDumpForm from './BrainDumpForm';
 import ProFeatureBadge from '../ui/ProFeatureBadge';
 import UpgradeModal from '../ui/UpgradeModal';
 
 export default function TaskForm({ onScheduleNew }) {
-  const { addTask, autoScheduleTask } = useTasks();
+  const { addTask, autoScheduleTask, refreshTasks } = useTasks();
   const { isAuthenticated, hasFeatureAccess } = useAuth();
   const [mode, setMode] = useState('single'); // 'single' or 'brainDump'
   const [name, setName] = useState('');
   const [duration, setDuration] = useState('');
+  const [complexity, setComplexity] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [genCount, setGenCount] = useState(5);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const canUseBrainDump = hasFeatureAccess('brain_dump');
 
@@ -40,10 +45,12 @@ export default function TaskForm({ onScheduleNew }) {
       onScheduleNew({
         name: name.trim(),
         estimatedDuration: durationMinutes,
+        complexity,
         isNew: true  // Flag to indicate this task needs to be created
       });
       setName('');
       setDuration('');
+      setComplexity(3);
       return;
     }
 
@@ -52,11 +59,13 @@ export default function TaskForm({ onScheduleNew }) {
     try {
       await addTask({
         name: name.trim(),
-        estimatedDuration: durationMinutes
+        estimatedDuration: durationMinutes,
+        complexity
       });
 
       setName('');
       setDuration('');
+      setComplexity(3);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -84,17 +93,35 @@ export default function TaskForm({ onScheduleNew }) {
     try {
       const newTask = await addTask({
         name: name.trim(),
-        estimatedDuration: durationMinutes
+        estimatedDuration: durationMinutes,
+        complexity
       });
       const result = await autoScheduleTask(newTask.id);
       setSuccessMessage(`Scheduled ${result.sessionsCreated} session(s) for "${name.trim()}"`);
       setName('');
       setDuration('');
+      setComplexity(3);
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleGenerateTestTasks() {
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const tasks = generateRandomTasks(genCount);
+      await createTasksBatch(tasks);
+      await refreshTasks();
+      setSuccessMessage(`Generated ${tasks.length} test tasks`);
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setIsGenerating(false);
     }
   }
 
@@ -187,6 +214,33 @@ export default function TaskForm({ onScheduleNew }) {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Complexity
+                </label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map(level => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setComplexity(level)}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                        complexity === level
+                          ? level <= 2 ? 'bg-green-500 text-white'
+                            : level === 3 ? 'bg-yellow-500 text-white'
+                            : 'bg-red-500 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                  <span className="ml-2 text-xs text-gray-400 self-center">
+                    {complexity <= 2 ? 'Easy' : complexity === 3 ? 'Medium' : 'Hard'}
+                  </span>
+                </div>
+              </div>
+
               {error && (
                 <p className="text-sm text-red-600">{error}</p>
               )}
@@ -229,6 +283,32 @@ export default function TaskForm({ onScheduleNew }) {
               </div>
             </div>
           </form>
+        )}
+
+        {/* Generate Test Tasks */}
+        {isAuthenticated && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Test:</span>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={genCount}
+                onChange={(e) => setGenCount(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-14 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleGenerateTestTasks}
+                disabled={isGenerating}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50"
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+                {isGenerating ? 'Generating...' : 'Generate Test Tasks'}
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
