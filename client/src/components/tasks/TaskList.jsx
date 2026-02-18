@@ -11,6 +11,8 @@ export default function TaskList({ onSchedule }) {
   const [editingTask, setEditingTask] = useState(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [scheduledSelectionMode, setScheduledSelectionMode] = useState(false);
+  const [scheduledSelectedIds, setScheduledSelectedIds] = useState(new Set());
   const [easierFirst, setEasierFirst] = useState(true);
   const [batchScheduling, setBatchScheduling] = useState(false);
   const [batchResult, setBatchResult] = useState(null);
@@ -95,6 +97,42 @@ export default function TaskList({ onSchedule }) {
       alert('Failed to auto-schedule: ' + (err.response?.data?.error || err.message));
     } finally {
       setBatchScheduling(false);
+    }
+  }
+
+  function toggleScheduledSelectionMode() {
+    setScheduledSelectionMode(prev => !prev);
+    setScheduledSelectedIds(new Set());
+  }
+
+  function toggleScheduledSelect(id) {
+    setScheduledSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleScheduledSelectAll(scheduledList) {
+    if (scheduledSelectedIds.size === scheduledList.length) {
+      setScheduledSelectedIds(new Set());
+    } else {
+      setScheduledSelectedIds(new Set(scheduledList.map(t => t.id)));
+    }
+  }
+
+  async function handleScheduledBulkDelete() {
+    const count = scheduledSelectedIds.size;
+    if (count === 0) return;
+    if (!window.confirm(`Delete ${count} selected task${count > 1 ? 's' : ''}?`)) return;
+
+    try {
+      await removeTasksBatch([...scheduledSelectedIds]);
+      setScheduledSelectedIds(new Set());
+      setScheduledSelectionMode(false);
+    } catch (err) {
+      alert('Failed to delete tasks: ' + err.message);
     }
   }
 
@@ -234,10 +272,49 @@ export default function TaskList({ onSchedule }) {
         {/* Scheduled Tasks Section */}
         {scheduledTasks.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <ListTodo className="w-5 h-5 text-green-500" />
-              Scheduled Tasks
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <ListTodo className="w-5 h-5 text-green-500" />
+                Scheduled Tasks
+              </h2>
+
+              <div className="flex items-center gap-2">
+                {scheduledSelectionMode && scheduledSelectedIds.size > 0 && (
+                  <button
+                    onClick={handleScheduledBulkDelete}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete ({scheduledSelectedIds.size})
+                  </button>
+                )}
+                <button
+                  onClick={toggleScheduledSelectionMode}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    scheduledSelectionMode
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  {scheduledSelectionMode ? 'Cancel' : 'Select'}
+                </button>
+              </div>
+            </div>
+
+            {scheduledSelectionMode && (
+              <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={scheduledSelectedIds.size === scheduledTasks.length}
+                    onChange={() => toggleScheduledSelectAll(scheduledTasks)}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  Select All ({scheduledTasks.length})
+                </label>
+              </div>
+            )}
 
             <div className="space-y-3">
               {scheduledTasks.map((task) => (
@@ -251,6 +328,9 @@ export default function TaskList({ onSchedule }) {
                   onComplete={completeTask}
                   onUnscheduleSession={handleUnscheduleSession}
                   isAuthenticated={isAuthenticated}
+                  selectionMode={scheduledSelectionMode}
+                  isSelected={scheduledSelectedIds.has(task.id)}
+                  onToggleSelect={toggleScheduledSelect}
                 />
               ))}
             </div>

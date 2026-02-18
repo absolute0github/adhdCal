@@ -1,15 +1,32 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTasks } from '../../context/TaskContext';
 import { getTodayEvents, getEvents } from '../../services/calendarService';
 import { formatTime, isToday } from '../../utils/timeUtils';
 
 export default function Sidebar({ isMobile = false }) {
   const { isAuthenticated } = useAuth();
+  const { tasks, unscheduleSession } = useTasks();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
+
+  // Build lookup: calendarEventId → { taskId, sessionId }
+  const sessionLookup = useMemo(() => {
+    const map = {};
+    for (const task of tasks) {
+      if (task.scheduledSessions) {
+        for (const session of task.scheduledSessions) {
+          if (session.calendarEventId) {
+            map[session.calendarEventId] = { taskId: task.id, sessionId: session.sessionId };
+          }
+        }
+      }
+    }
+    return map;
+  }, [tasks]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -67,6 +84,17 @@ export default function Sidebar({ isMobile = false }) {
 
   const scheduledHours = Math.floor(totalScheduledMinutes / 60);
   const scheduledMinutes = Math.round(totalScheduledMinutes % 60);
+
+  async function handleRemoveSession(taskId, sessionId) {
+    if (window.confirm('Remove this scheduled session from your calendar?')) {
+      try {
+        await unscheduleSession(taskId, sessionId);
+        fetchEvents();
+      } catch (err) {
+        alert('Failed to remove session: ' + err.message);
+      }
+    }
+  }
 
   const baseClasses = isMobile
     ? "flex-1 bg-gray-50 flex flex-col h-full overflow-hidden"
@@ -149,7 +177,12 @@ export default function Sidebar({ isMobile = false }) {
         ) : (
           <div className="space-y-2">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                sessionInfo={sessionLookup[event.id]}
+                onRemove={handleRemoveSession}
+              />
             ))}
           </div>
         )}
@@ -158,7 +191,7 @@ export default function Sidebar({ isMobile = false }) {
   );
 }
 
-function EventCard({ event }) {
+function EventCard({ event, sessionInfo, onRemove }) {
   const startTime = event.allDay ? 'All day' : formatTime(event.start);
   const endTime = event.allDay ? '' : formatTime(event.end);
 
@@ -180,13 +213,26 @@ function EventCard({ event }) {
   const colorClass = colorMap[event.colorId] || 'bg-blue-50 border-blue-200';
 
   return (
-    <div className={`p-3 rounded-lg border-l-4 ${colorClass}`}>
-      <p className="font-medium text-sm text-gray-900 truncate">
-        {event.summary}
-      </p>
-      <p className="text-xs text-gray-600 mt-1">
-        {startTime}{endTime && ` - ${endTime}`}
-      </p>
+    <div className={`p-3 rounded-lg border-l-4 ${colorClass} group relative`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm text-gray-900 truncate">
+            {event.summary}
+          </p>
+          <p className="text-xs text-gray-600 mt-1">
+            {startTime}{endTime && ` - ${endTime}`}
+          </p>
+        </div>
+        {sessionInfo && onRemove && (
+          <button
+            onClick={() => onRemove(sessionInfo.taskId, sessionInfo.sessionId)}
+            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all"
+            title="Remove from calendar"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
