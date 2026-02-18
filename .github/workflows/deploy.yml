@@ -27,5 +27,8 @@ jobs:
             git reset --hard origin/main
             git clean -fd
             npm install
+            # Write client env vars for Vite build
+            echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" > "$REPO_DIR/client/.env"
+            echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> "$REPO_DIR/client/.env"
             npm run build
             npx pm2 delete timekit 2>/dev/null; npx pm2 restart adhdcal 2>/dev/null || npx pm2 start ecosystem.config.cjs

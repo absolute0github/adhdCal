@@ -54,6 +54,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // If supabase isn't configured, skip auth entirely
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
@@ -100,6 +106,7 @@ export function AuthProvider({ children }) {
 
   // Sign in with Google (Supabase auth, not calendar)
   const signInWithGoogle = async () => {
+    if (!supabase) return;
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -112,6 +119,7 @@ export function AuthProvider({ children }) {
 
   // Sign in with email/password
   const signInWithEmail = async (email, password) => {
+    if (!supabase) return { error: { message: 'Auth not configured' } };
     setError(null);
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -123,6 +131,7 @@ export function AuthProvider({ children }) {
 
   // Sign up with email/password
   const signUpWithEmail = async (email, password, displayName) => {
+    if (!supabase) return { error: { message: 'Auth not configured' } };
     setError(null);
     const { error } = await supabase.auth.signUp({
       email,
@@ -139,6 +148,7 @@ export function AuthProvider({ children }) {
 
   // Sign out
   const signOut = async () => {
+    if (!supabase) return;
     setError(null);
     const { error } = await supabase.auth.signOut();
     if (error) setError(error.message);
