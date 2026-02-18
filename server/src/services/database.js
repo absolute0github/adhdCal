@@ -89,6 +89,13 @@ export const userQueries = {
     );
   },
 
+  async updateRole(userId, role) {
+    await update(
+      'UPDATE users SET role = ? WHERE id = ?',
+      [role, userId]
+    );
+  },
+
   async getById(id) {
     return queryOne('SELECT * FROM users WHERE id = ?', [id]);
   }
