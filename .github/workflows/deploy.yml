@@ -30,5 +30,20 @@ jobs:
             # Write client env vars for Vite build
             echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" > "$REPO_DIR/client/.env"
             echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> "$REPO_DIR/client/.env"
+            # Write server env vars
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" > "$REPO_DIR/server/.env"
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> "$REPO_DIR/server/.env"
+            echo "GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}" >> "$REPO_DIR/server/.env"
+            echo "PORT=3001" >> "$REPO_DIR/server/.env"
+            echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> "$REPO_DIR/server/.env"
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> "$REPO_DIR/server/.env"
+            echo "DB_HOST=${{ secrets.DB_HOST }}" >> "$REPO_DIR/server/.env"
+            echo "DB_USER=${{ secrets.DB_USER }}" >> "$REPO_DIR/server/.env"
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> "$REPO_DIR/server/.env"
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> "$REPO_DIR/server/.env"
+            echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> "$REPO_DIR/server/.env"
+            echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> "$REPO_DIR/server/.env"
+            echo "SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}" >> "$REPO_DIR/server/.env"
+            echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> "$REPO_DIR/server/.env"
             npm run build
             npx pm2 delete timekit 2>/dev/null; npx pm2 restart adhdcal 2>/dev/null || npx pm2 start ecosystem.config.cjs
