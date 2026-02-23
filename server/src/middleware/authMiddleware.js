@@ -1,13 +1,29 @@
 import { verifyToken, syncUser, hasFeatureAccess, checkTaskLimit, createFallbackUser } from '../services/supabaseAuth.js';
 import { getAuthenticatedClient } from '../services/googleCalendarService.js';
 import { taskQueries } from '../services/database.js';
+import { config } from '../config/index.js';
 
 /**
- * Middleware to require Supabase authentication
- * Attaches user to req.user
+ * Middleware to require authentication
+ * Supports both Supabase Bearer tokens AND service tokens (X-Service-Token header)
  */
 export async function requireAuth(req, res, next) {
   try {
+    // Check for service token first (for external integrations like Bodie)
+    const serviceToken = req.headers['x-service-token'];
+    if (serviceToken && config.serviceToken && serviceToken === config.serviceToken) {
+      // Service token auth - create a service user context
+      req.user = {
+        id: 'service-account',
+        email: 'bodie@service.local',
+        subscription_tier: 'premium',
+        is_admin: true
+      };
+      req.isServiceAuth = true;
+      return next();
+    }
+
+    // Standard Supabase auth
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -47,6 +63,19 @@ export async function requireAuth(req, res, next) {
  */
 export async function optionalAuth(req, res, next) {
   try {
+    // Check for service token first
+    const serviceToken = req.headers['x-service-token'];
+    if (serviceToken && config.serviceToken && serviceToken === config.serviceToken) {
+      req.user = {
+        id: 'service-account',
+        email: 'bodie@service.local',
+        subscription_tier: 'premium',
+        is_admin: true
+      };
+      req.isServiceAuth = true;
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {

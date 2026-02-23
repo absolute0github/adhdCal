@@ -10,6 +10,7 @@ dotenv.config({ path: join(__dirname, '../../.env') });
 export const config = {
   port: process.env.PORT || 3001,
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  serviceToken: process.env.SERVICE_TOKEN,
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
