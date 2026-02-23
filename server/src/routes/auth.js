@@ -131,4 +131,28 @@ router.get('/profile', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Temporary debug endpoint - remove after fixing brain dump issue
+router.get('/debug-access', authMiddleware, (req, res) => {
+  const user = req.user;
+  const adminEmailSet = !!config.adminEmail;
+  const adminEmailValue = config.adminEmail
+    ? config.adminEmail.substring(0, 3) + '***' + config.adminEmail.substring(config.adminEmail.indexOf('@'))
+    : '(not set)';
+  const emailMatch = config.adminEmail
+    ? user.email?.toLowerCase() === config.adminEmail.toLowerCase()
+    : false;
+
+  res.json({
+    userEmail: user.email,
+    userRole: user.role,
+    userSubscriptionTier: user.subscription_tier,
+    isFallback: user.isFallback || false,
+    adminEmailConfigured: adminEmailSet,
+    adminEmailMasked: adminEmailValue,
+    emailMatchesAdmin: emailMatch,
+    hasFeatureAccessResult: hasFeatureAccess(user, 'brain_dump'),
+    rawUserKeys: Object.keys(user)
+  });
+});
+
 export default router;
