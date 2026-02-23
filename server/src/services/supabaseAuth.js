@@ -47,8 +47,8 @@ export async function syncUser(supabaseUser) {
   let dbUser = await userQueries.findBySupabaseId(supabaseUser.id);
 
   if (!dbUser) {
-    // Determine role - admin if email matches admin email
-    const role = supabaseUser.email === config.adminEmail ? 'admin' : 'user';
+    // Determine role - admin if email matches admin email (case-insensitive)
+    const role = supabaseUser.email?.toLowerCase() === config.adminEmail?.toLowerCase() ? 'admin' : 'user';
 
     // Create new user
     dbUser = await userQueries.create({
@@ -63,8 +63,8 @@ export async function syncUser(supabaseUser) {
     await preferencesQueries.upsert(dbUser.id, {});
 
     console.log(`Created new user: ${dbUser.email} (${dbUser.role})`);
-  } else if (dbUser.role !== 'admin' && dbUser.email === config.adminEmail) {
-    // Upgrade to admin if email matches
+  } else if (dbUser.role !== 'admin' && dbUser.email?.toLowerCase() === config.adminEmail?.toLowerCase()) {
+    // Upgrade to admin if email matches (case-insensitive)
     await userQueries.updateRole(dbUser.id, 'admin');
     dbUser.role = 'admin';
   }
@@ -76,7 +76,7 @@ export async function syncUser(supabaseUser) {
  * Create a fallback user object from Supabase user when database is unavailable
  */
 export function createFallbackUser(supabaseUser) {
-  const isAdmin = supabaseUser.email === config.adminEmail;
+  const isAdmin = supabaseUser.email?.toLowerCase() === config.adminEmail?.toLowerCase();
   return {
     id: null,
     supabase_id: supabaseUser.id,
