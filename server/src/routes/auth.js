@@ -12,6 +12,18 @@ import { hasFeatureAccess, FREE_TIER_LIMITS } from '../services/supabaseAuth.js'
 
 const router = Router();
 
+// Temporary diagnostic - remove after Supabase issue resolved
+router.get('/diag', (req, res) => {
+  res.json({
+    supabaseUrl: config.supabase.url ? config.supabase.url.substring(0, 20) + '...' : '(not set)',
+    supabaseServiceKey: config.supabase.serviceKey ? 'set (' + config.supabase.serviceKey.length + ' chars)' : '(not set)',
+    supabaseAnonKey: config.supabase.anonKey ? 'set (' + config.supabase.anonKey.length + ' chars)' : '(not set)',
+    adminEmail: config.adminEmail || '(not set)',
+    nodeEnv: process.env.NODE_ENV,
+    envSource: process.env.SUPABASE_URL ? 'from env' : 'missing from env'
+  });
+});
+
 // Redirect to Google OAuth consent screen
 router.get('/login', (req, res) => {
   const oauth2Client = createOAuth2Client();
