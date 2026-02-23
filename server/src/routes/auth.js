@@ -13,15 +13,49 @@ import { hasFeatureAccess, FREE_TIER_LIMITS } from '../services/supabaseAuth.js'
 const router = Router();
 
 // Temporary diagnostic - remove after Supabase issue resolved
-router.get('/diag', (req, res) => {
-  res.json({
+router.get('/diag', async (req, res) => {
+  const info = {
     supabaseUrl: config.supabase.url ? config.supabase.url.substring(0, 20) + '...' : '(not set)',
     supabaseServiceKey: config.supabase.serviceKey ? 'set (' + config.supabase.serviceKey.length + ' chars)' : '(not set)',
     supabaseAnonKey: config.supabase.anonKey ? 'set (' + config.supabase.anonKey.length + ' chars)' : '(not set)',
     adminEmail: config.adminEmail || '(not set)',
     nodeEnv: process.env.NODE_ENV,
     envSource: process.env.SUPABASE_URL ? 'from env' : 'missing from env'
-  });
+  };
+
+  // Test token verification if Authorization header present
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    info.tokenPresent = true;
+    info.tokenLength = token.length;
+    info.tokenPreview = token.substring(0, 20) + '...';
+    try {
+      const { verifyToken, syncUser, createFallbackUser } = await import('../services/supabaseAuth.js');
+      const supabaseUser = await verifyToken(token);
+      info.verifyResult = 'success';
+      info.supabaseEmail = supabaseUser.email;
+      info.supabaseId = supabaseUser.id;
+
+      try {
+        const dbUser = await syncUser(supabaseUser);
+        info.syncResult = 'success';
+        info.dbRole = dbUser.role;
+        info.dbEmail = dbUser.email;
+      } catch (syncErr) {
+        info.syncResult = 'failed: ' + syncErr.message;
+        const fallback = createFallbackUser(supabaseUser);
+        info.fallbackRole = fallback.role;
+      }
+    } catch (verifyErr) {
+      info.verifyResult = 'failed: ' + verifyErr.message;
+    }
+  } else {
+    info.tokenPresent = false;
+    info.hint = 'Add Authorization: Bearer <token> header to test verification';
+  }
+
+  res.json(info);
 });
 
 // Redirect to Google OAuth consent screen
