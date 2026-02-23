@@ -5,8 +5,13 @@ let pool = null;
 
 export function getPool() {
   if (!pool) {
+    if (!config.db.user || !config.db.name) {
+      console.error('[DB] Missing DB_USER or DB_NAME — cannot create connection pool');
+      return null;
+    }
     pool = mysql.createPool({
       host: config.db.host,
+      port: config.db.port,
       user: config.db.user,
       password: config.db.password,
       database: config.db.name,
@@ -14,15 +19,17 @@ export function getPool() {
       connectionLimit: 10,
       queueLimit: 0,
       enableKeepAlive: true,
-      keepAliveInitialDelay: 0
+      keepAliveInitialDelay: 0,
+      connectTimeout: 10000
     });
   }
   return pool;
 }
 
 export async function query(sql, params = []) {
-  const pool = getPool();
-  const [rows] = await pool.execute(sql, params);
+  const p = getPool();
+  if (!p) throw new Error('Database not configured');
+  const [rows] = await p.execute(sql, params);
   return rows;
 }
 
@@ -32,27 +39,52 @@ export async function queryOne(sql, params = []) {
 }
 
 export async function insert(sql, params = []) {
-  const pool = getPool();
-  const [result] = await pool.execute(sql, params);
+  const p = getPool();
+  if (!p) throw new Error('Database not configured');
+  const [result] = await p.execute(sql, params);
   return result.insertId;
 }
 
 export async function update(sql, params = []) {
-  const pool = getPool();
-  const [result] = await pool.execute(sql, params);
+  const p = getPool();
+  if (!p) throw new Error('Database not configured');
+  const [result] = await p.execute(sql, params);
   return result.affectedRows;
 }
 
-export async function testConnection() {
-  try {
-    const pool = getPool();
-    const connection = await pool.getConnection();
-    await connection.ping();
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error('Database connection failed:', error.message);
-    return false;
+/**
+ * Test database connection with retry logic.
+ * Returns { connected, error?, code?, host?, port?, user?, database? } for diagnostics.
+ */
+export async function testConnection(retries = 2) {
+  const p = getPool();
+  if (!p) {
+    return { connected: false, error: 'Pool not created — missing DB_USER or DB_NAME' };
+  }
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const connection = await p.getConnection();
+      await connection.ping();
+      connection.release();
+      return { connected: true };
+    } catch (error) {
+      console.error(`[DB] Connection attempt ${attempt}/${retries} failed:`, error.message, `(code: ${error.code || 'none'})`);
+      if (attempt < retries) {
+        const delay = 1000 * attempt;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        return {
+          connected: false,
+          error: error.message,
+          code: error.code || null,
+          host: config.db.host,
+          port: config.db.port,
+          user: config.db.user,
+          database: config.db.name
+        };
+      }
+    }
   }
 }
 

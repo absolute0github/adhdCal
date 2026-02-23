@@ -8,7 +8,7 @@ import {
 } from '../services/googleCalendarService.js';
 import { saveTokens, clearTokens, getTokens } from '../services/storageService.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
-import { hasFeatureAccess, FREE_TIER_LIMITS } from '../services/supabaseAuth.js';
+import { hasFeatureAccess, FREE_TIER_LIMITS, isAdminEmail } from '../services/supabaseAuth.js';
 
 const router = Router();
 
@@ -108,7 +108,7 @@ router.get('/profile', authMiddleware, async (req, res, next) => {
       featureAccess[feature] = hasFeatureAccess(user, feature);
     }
 
-    const isPremium = user.role === 'admin' ||
+    const isPremium = user.role === 'admin' || isAdminEmail(user.email) ||
       (user.subscription_tier === 'premium' &&
         (!user.subscription_expires_at || new Date(user.subscription_expires_at) >= new Date()));
 

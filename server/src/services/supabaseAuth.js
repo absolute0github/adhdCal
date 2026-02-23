@@ -40,15 +40,23 @@ export async function verifyToken(token) {
 }
 
 /**
- * Get or create a user in our database based on Supabase user
+ * Check if an email is the admin email (case-insensitive).
+ */
+export function isAdminEmail(email) {
+  return !!(email && config.adminEmail && email.toLowerCase() === config.adminEmail.toLowerCase());
+}
+
+/**
+ * Get or create a user in our database based on Supabase user.
+ * Always ensures admin email gets admin role.
  */
 export async function syncUser(supabaseUser) {
   // Check if user already exists
   let dbUser = await userQueries.findBySupabaseId(supabaseUser.id);
 
   if (!dbUser) {
-    // Determine role - admin if email matches admin email (case-insensitive)
-    const role = supabaseUser.email?.toLowerCase() === config.adminEmail?.toLowerCase() ? 'admin' : 'user';
+    // Determine role - admin if email matches admin email
+    const role = isAdminEmail(supabaseUser.email) ? 'admin' : 'user';
 
     // Create new user
     dbUser = await userQueries.create({
@@ -60,12 +68,29 @@ export async function syncUser(supabaseUser) {
     });
 
     // Create default preferences for new user
-    await preferencesQueries.upsert(dbUser.id, {});
+    try {
+      await preferencesQueries.upsert(dbUser.id, {});
+    } catch (prefError) {
+      console.warn('[Auth] Failed to create default preferences:', prefError.message);
+    }
 
-    console.log(`Created new user: ${dbUser.email} (${dbUser.role})`);
-  } else if (dbUser.role !== 'admin' && dbUser.email?.toLowerCase() === config.adminEmail?.toLowerCase()) {
-    // Upgrade to admin if email matches (case-insensitive)
-    await userQueries.updateRole(dbUser.id, 'admin');
+    console.log(`[Auth] Created new user: ${dbUser.email} (${dbUser.role})`);
+  } else if (dbUser.role !== 'admin' && isAdminEmail(dbUser.email)) {
+    // Upgrade to admin if email matches
+    try {
+      await userQueries.updateRole(dbUser.id, 'admin');
+      dbUser.role = 'admin';
+      console.log(`[Auth] Upgraded user ${dbUser.email} to admin`);
+    } catch (roleError) {
+      // DB write failed but user was read OK — force admin in-memory
+      console.warn('[Auth] Failed to persist admin role upgrade, applying in-memory:', roleError.message);
+      dbUser.role = 'admin';
+    }
+  }
+
+  // Final safety net: if email matches admin, always ensure admin role in returned object
+  if (isAdminEmail(dbUser.email) && dbUser.role !== 'admin') {
+    console.warn('[Auth] Admin email detected but role was not admin — forcing admin role in-memory');
     dbUser.role = 'admin';
   }
 
@@ -73,18 +98,19 @@ export async function syncUser(supabaseUser) {
 }
 
 /**
- * Create a fallback user object from Supabase user when database is unavailable
+ * Create a fallback user object from Supabase user when database is unavailable.
+ * Uses the Supabase ID as a stable identifier so downstream code has a non-null user id.
  */
 export function createFallbackUser(supabaseUser) {
-  const isAdmin = supabaseUser.email?.toLowerCase() === config.adminEmail?.toLowerCase();
+  const admin = isAdminEmail(supabaseUser.email);
   return {
-    id: null,
+    id: `fallback-${supabaseUser.id}`,
     supabase_id: supabaseUser.id,
     email: supabaseUser.email,
     display_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0],
     avatar_url: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
-    role: isAdmin ? 'admin' : 'user',
-    subscription_tier: isAdmin ? 'premium' : 'free',
+    role: admin ? 'admin' : 'user',
+    subscription_tier: admin ? 'premium' : 'free',
     subscription_expires_at: null,
     isFallback: true
   };
@@ -94,8 +120,8 @@ export function createFallbackUser(supabaseUser) {
  * Check if user has access to a premium feature
  */
 export function hasFeatureAccess(user, feature) {
-  // Admins always have access
-  if (user.role === 'admin') {
+  // Admins always have access (check role AND email as safety net)
+  if (user.role === 'admin' || user.is_admin === true || isAdminEmail(user.email)) {
     return true;
   }
 
@@ -138,7 +164,7 @@ export const FREE_TIER_LIMITS = {
  * Check if user is within free tier task limit
  */
 export async function checkTaskLimit(user, currentTaskCount) {
-  if (user.role === 'admin' || user.subscription_tier === 'premium') {
+  if (user.role === 'admin' || user.is_admin === true || isAdminEmail(user.email) || user.subscription_tier === 'premium') {
     return { allowed: true };
   }
 

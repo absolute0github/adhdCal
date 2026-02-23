@@ -1,4 +1,4 @@
-import { verifyToken, syncUser, hasFeatureAccess, checkTaskLimit, createFallbackUser } from '../services/supabaseAuth.js';
+import { verifyToken, syncUser, hasFeatureAccess, checkTaskLimit, createFallbackUser, isAdminEmail } from '../services/supabaseAuth.js';
 import { getAuthenticatedClient } from '../services/googleCalendarService.js';
 import { taskQueries } from '../services/database.js';
 import { config } from '../config/index.js';
@@ -16,6 +16,7 @@ export async function requireAuth(req, res, next) {
       req.user = {
         id: 'service-account',
         email: 'bodie@service.local',
+        role: 'admin',
         subscription_tier: 'premium',
         is_admin: true
       };
@@ -41,15 +42,22 @@ export async function requireAuth(req, res, next) {
     try {
       dbUser = await syncUser(supabaseUser);
     } catch (dbError) {
-      console.warn('Database sync failed, using fallback user:', dbError.message);
+      console.warn('[Auth] Database sync failed, using fallback user:', dbError.message);
       dbUser = createFallbackUser(supabaseUser);
+    }
+
+    // Final safety net: always ensure admin email gets admin access
+    if (isAdminEmail(dbUser.email) && dbUser.role !== 'admin') {
+      console.warn(`[Auth] Admin email ${dbUser.email} had role=${dbUser.role}, forcing admin`);
+      dbUser.role = 'admin';
+      dbUser.subscription_tier = 'premium';
     }
 
     req.user = dbUser;
     req.supabaseUser = supabaseUser;
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error.message);
+    console.error('[Auth] Auth middleware error:', error.message);
     return res.status(401).json({
       error: 'Unauthorized',
       message: error.message || 'Invalid or expired token'
@@ -69,6 +77,7 @@ export async function optionalAuth(req, res, next) {
       req.user = {
         id: 'service-account',
         email: 'bodie@service.local',
+        role: 'admin',
         subscription_tier: 'premium',
         is_admin: true
       };
@@ -87,8 +96,14 @@ export async function optionalAuth(req, res, next) {
       try {
         dbUser = await syncUser(supabaseUser);
       } catch (dbError) {
-        console.warn('Database sync failed, using fallback user:', dbError.message);
+        console.warn('[Auth] Database sync failed, using fallback user:', dbError.message);
         dbUser = createFallbackUser(supabaseUser);
+      }
+
+      // Final safety net: always ensure admin email gets admin access
+      if (isAdminEmail(dbUser.email) && dbUser.role !== 'admin') {
+        dbUser.role = 'admin';
+        dbUser.subscription_tier = 'premium';
       }
 
       req.user = dbUser;

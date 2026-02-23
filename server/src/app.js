@@ -29,12 +29,26 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/preferences', preferencesRoutes);
 
-// Health check
+// Health check with detailed diagnostics
 app.get('/api/health', async (req, res) => {
-  const dbConnected = await testConnection();
+  const dbResult = await testConnection();
+  const envStatus = {
+    DB_HOST: config.db.host || 'MISSING',
+    DB_PORT: config.db.port,
+    DB_USER: config.db.user ? 'set' : 'MISSING',
+    DB_NAME: config.db.name || 'MISSING',
+    ADMIN_EMAIL: config.adminEmail || 'MISSING',
+    SUPABASE_URL: config.supabase.url ? 'set' : 'MISSING',
+    SUPABASE_SERVICE_KEY: config.supabase.serviceKey ? 'set' : 'MISSING',
+    CLIENT_URL: config.clientUrl
+  };
+
   res.json({
     status: 'ok',
-    database: dbConnected ? 'connected' : 'disconnected'
+    database: dbResult.connected ? 'connected' : 'disconnected',
+    ...(dbResult.error && { dbError: dbResult.error, dbCode: dbResult.code }),
+    ...(dbResult.host && { dbHost: dbResult.host, dbPort: dbResult.port }),
+    env: envStatus
   });
 });
 

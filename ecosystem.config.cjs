@@ -10,6 +10,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3001,
+      CLIENT_URL: 'https://adhdcal.top',
       ADMIN_EMAIL: 'support@absolute0.net',
       DB_HOST: '127.0.0.1',
       DB_USER: 'kcpnvspcqx',
