@@ -49,10 +49,10 @@ export async function testConnection() {
     const connection = await pool.getConnection();
     await connection.ping();
     connection.release();
-    return true;
+    return { connected: true };
   } catch (error) {
     console.error('Database connection failed:', error.message);
-    return false;
+    return { connected: false, error: error.message, code: error.code };
   }
 }
 

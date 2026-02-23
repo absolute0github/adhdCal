@@ -31,10 +31,11 @@ app.use('/api/preferences', preferencesRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {
-  const dbConnected = await testConnection();
+  const db = await testConnection();
   res.json({
     status: 'ok',
-    database: dbConnected ? 'connected' : 'disconnected'
+    database: db.connected ? 'connected' : 'disconnected',
+    ...(db.error && { dbError: db.error, dbCode: db.code })
   });
 });
 
