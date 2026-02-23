@@ -94,8 +94,11 @@ export function createFallbackUser(supabaseUser) {
  * Check if user has access to a premium feature
  */
 export function hasFeatureAccess(user, feature) {
-  // Admins always have access
+  // Admins always have access (check both role and email as safety net)
   if (user.role === 'admin') {
+    return true;
+  }
+  if (config.adminEmail && user.email?.toLowerCase() === config.adminEmail.toLowerCase()) {
     return true;
   }
 
@@ -139,6 +142,9 @@ export const FREE_TIER_LIMITS = {
  */
 export async function checkTaskLimit(user, currentTaskCount) {
   if (user.role === 'admin' || user.subscription_tier === 'premium') {
+    return { allowed: true };
+  }
+  if (config.adminEmail && user.email?.toLowerCase() === config.adminEmail.toLowerCase()) {
     return { allowed: true };
   }
 

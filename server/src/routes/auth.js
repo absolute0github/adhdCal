@@ -108,7 +108,9 @@ router.get('/profile', authMiddleware, async (req, res, next) => {
       featureAccess[feature] = hasFeatureAccess(user, feature);
     }
 
-    const isPremium = user.role === 'admin' ||
+    const isAdmin = user.role === 'admin' ||
+      (config.adminEmail && user.email?.toLowerCase() === config.adminEmail.toLowerCase());
+    const isPremium = isAdmin ||
       (user.subscription_tier === 'premium' &&
         (!user.subscription_expires_at || new Date(user.subscription_expires_at) >= new Date()));
 
@@ -117,7 +119,7 @@ router.get('/profile', authMiddleware, async (req, res, next) => {
       email: user.email,
       displayName: user.display_name,
       avatarUrl: user.avatar_url,
-      role: user.role,
+      role: isAdmin ? 'admin' : user.role,
       subscriptionTier: user.subscription_tier || 'free',
       subscriptionExpiresAt: user.subscription_expires_at,
       isPremium,
