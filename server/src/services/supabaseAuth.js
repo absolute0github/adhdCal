@@ -6,10 +6,11 @@ import { userQueries, preferencesQueries } from './database.js';
 let supabaseAdmin = null;
 
 function getSupabaseAdmin() {
-  if (!supabaseAdmin && config.supabase.url && config.supabase.serviceKey) {
+  const supabaseKey = config.supabase.serviceKey || config.supabase.anonKey;
+  if (!supabaseAdmin && config.supabase.url && supabaseKey) {
     supabaseAdmin = createClient(
       config.supabase.url,
-      config.supabase.serviceKey,
+      supabaseKey,
       {
         auth: {
           autoRefreshToken: false,

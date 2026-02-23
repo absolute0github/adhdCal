@@ -41,9 +41,16 @@ jobs:
             echo "DB_USER=${{ secrets.DB_USER }}" >> "$REPO_DIR/server/.env"
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> "$REPO_DIR/server/.env"
             echo "DB_NAME=${{ secrets.DB_NAME }}" >> "$REPO_DIR/server/.env"
-            echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> "$REPO_DIR/server/.env"
-            echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> "$REPO_DIR/server/.env"
+            # Supabase: fall back to VITE_ variants if server-side secrets not set
+            SUPA_URL="${{ secrets.SUPABASE_URL }}"
+            [ -z "$SUPA_URL" ] && SUPA_URL="${{ secrets.VITE_SUPABASE_URL }}"
+            SUPA_ANON="${{ secrets.SUPABASE_ANON_KEY }}"
+            [ -z "$SUPA_ANON" ] && SUPA_ANON="${{ secrets.VITE_SUPABASE_ANON_KEY }}"
+            echo "SUPABASE_URL=$SUPA_URL" >> "$REPO_DIR/server/.env"
+            echo "SUPABASE_ANON_KEY=$SUPA_ANON" >> "$REPO_DIR/server/.env"
             echo "SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}" >> "$REPO_DIR/server/.env"
             echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> "$REPO_DIR/server/.env"
             npm run build
+            # Source env so PM2 inherits all vars (not just those in ecosystem.config)
+            set -a; source "$REPO_DIR/server/.env"; set +a
             npx pm2 delete timekit 2>/dev/null; npx pm2 startOrReload ecosystem.config.cjs --update-env
