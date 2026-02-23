@@ -37,7 +37,7 @@ jobs:
             echo "PORT=3001" >> "$REPO_DIR/server/.env"
             echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> "$REPO_DIR/server/.env"
             echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> "$REPO_DIR/server/.env"
-            echo "DB_HOST=${{ secrets.DB_HOST }}" >> "$REPO_DIR/server/.env"
+            echo "DB_HOST=127.0.0.1" >> "$REPO_DIR/server/.env"
             echo "DB_USER=${{ secrets.DB_USER }}" >> "$REPO_DIR/server/.env"
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> "$REPO_DIR/server/.env"
             echo "DB_NAME=${{ secrets.DB_NAME }}" >> "$REPO_DIR/server/.env"
@@ -46,4 +46,4 @@ jobs:
             echo "SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}" >> "$REPO_DIR/server/.env"
             echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> "$REPO_DIR/server/.env"
             npm run build
-            npx pm2 delete timekit 2>/dev/null; npx pm2 restart adhdcal 2>/dev/null || npx pm2 start ecosystem.config.cjs
+            npx pm2 delete timekit 2>/dev/null; npx pm2 startOrReload ecosystem.config.cjs --update-env
