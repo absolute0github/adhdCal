@@ -23,18 +23,35 @@ function getSupabaseAdmin() {
 }
 
 /**
- * Verify a Supabase JWT token and return the user
+ * Verify a Supabase JWT token and return the user.
+ * Uses direct REST API call to avoid client library session issues.
  */
 export async function verifyToken(token) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
+  const supabaseUrl = config.supabase.url;
+  const apiKey = config.supabase.serviceKey || config.supabase.anonKey;
+
+  if (!supabaseUrl || !apiKey) {
     throw new Error('Supabase not configured');
   }
 
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  // Call Supabase Auth API directly instead of using the client library,
+  // which can throw "Auth session missing!" in server-side contexts.
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'apikey': apiKey
+    }
+  });
 
-  if (error || !user) {
-    throw new Error(error?.message || 'Invalid token');
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.msg || body.message || `Token verification failed (${response.status})`);
+  }
+
+  const user = await response.json();
+
+  if (!user || !user.id) {
+    throw new Error('Invalid token');
   }
 
   return user;
