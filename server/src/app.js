@@ -8,8 +8,9 @@ import authRoutes from './routes/auth.js';
 import taskRoutes from './routes/tasks.js';
 import calendarRoutes from './routes/calendar.js';
 import preferencesRoutes from './routes/preferences.js';
+import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { testConnection } from './services/database.js';
+import { testConnection, runMigrations } from './services/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,6 +29,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Run database migrations
+runMigrations().catch(err => console.warn('Migration runner error:', err.message));
 
 // Health check
 app.get('/api/health', async (req, res) => {

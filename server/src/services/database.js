@@ -56,6 +56,23 @@ export async function testConnection() {
   }
 }
 
+// Run lightweight migrations on startup
+export async function runMigrations() {
+  try {
+    // Add suspended_at column if it doesn't exist
+    const cols = await query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = 'suspended_at'`,
+      [config.db.name]
+    );
+    if (cols.length === 0) {
+      await getPool().execute('ALTER TABLE users ADD COLUMN suspended_at DATETIME NULL DEFAULT NULL');
+      console.log('Migration: added suspended_at column to users table');
+    }
+  } catch (error) {
+    console.warn('Migration check failed (non-fatal):', error.message);
+  }
+}
+
 // User queries
 export const userQueries = {
   async findBySupabaseId(supabaseId) {
@@ -98,6 +115,23 @@ export const userQueries = {
 
   async getById(id) {
     return queryOne('SELECT * FROM users WHERE id = ?', [id]);
+  },
+
+  async findAll() {
+    return query(
+      `SELECT u.*,
+        (SELECT COUNT(*) FROM tasks t WHERE t.user_id = u.id AND t.status != 'completed') as active_task_count,
+        (SELECT COUNT(*) FROM tasks t WHERE t.user_id = u.id) as total_task_count
+       FROM users u ORDER BY u.created_at DESC`
+    );
+  },
+
+  async suspend(userId) {
+    return update('UPDATE users SET suspended_at = NOW() WHERE id = ?', [userId]);
+  },
+
+  async unsuspend(userId) {
+    return update('UPDATE users SET suspended_at = NULL WHERE id = ?', [userId]);
   }
 };
 

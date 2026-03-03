@@ -45,6 +45,15 @@ export async function requireAuth(req, res, next) {
       dbUser = createFallbackUser(supabaseUser);
     }
 
+    // Block suspended users
+    if (dbUser.suspended_at) {
+      return res.status(403).json({
+        error: 'Account suspended',
+        message: 'Your account has been suspended. Please contact support.',
+        code: 'ACCOUNT_SUSPENDED'
+      });
+    }
+
     req.user = dbUser;
     req.supabaseUser = supabaseUser;
     next();
@@ -192,6 +201,31 @@ export async function checkTaskCreationLimit(req, res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+/**
+ * Middleware to require admin role
+ * Must be used after requireAuth
+ */
+export function requireAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Authentication required'
+    });
+  }
+
+  const isAdmin = req.user.role === 'admin' ||
+    (config.adminEmail && req.user.email?.toLowerCase() === config.adminEmail.toLowerCase());
+
+  if (!isAdmin) {
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Admin access required'
+    });
+  }
+
+  next();
 }
 
 // Legacy middleware for backward compatibility

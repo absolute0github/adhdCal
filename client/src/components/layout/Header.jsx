@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Brain, LogOut, Calendar, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Brain, LogOut, Calendar, Settings, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import UserPreferencesModal from '../settings/UserPreferencesModal';
 
 export default function Header() {
-  const { user, signOut, googleCalendarConnected, connectGoogleCalendar } = useAuth();
+  const { user, signOut, googleCalendarConnected, connectGoogleCalendar, userProfile } = useAuth();
+  const isAdmin = userProfile?.role === 'admin';
   const [showPreferences, setShowPreferences] = useState(false);
 
   return (
@@ -28,6 +30,18 @@ export default function Header() {
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">Connect Calendar</span>
               </button>
+            )}
+
+            {/* Admin Link */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                title="Admin"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
             )}
 
             {/* Preferences Button */}
