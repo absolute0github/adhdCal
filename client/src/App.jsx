@@ -98,9 +98,11 @@ function App() {
           path="/admin"
           element={
             <AdminRoute>
-              <MainLayout>
-                <AdminDashboard />
-              </MainLayout>
+              <TaskProvider>
+                <MainLayout>
+                  <AdminDashboard />
+                </MainLayout>
+              </TaskProvider>
             </AdminRoute>
           }
         />
