@@ -14,11 +14,12 @@ export async function getTodayEvents() {
   return response.data;
 }
 
-export async function getAvailableSlots(start, end, minDuration) {
+export async function getAvailableSlots(start, end, minDuration, override = false) {
   const params = {};
   if (start) params.start = start;
   if (end) params.end = end;
   if (minDuration) params.minDuration = minDuration;
+  if (override) params.override = 'true';
 
   const response = await api.get('/calendar/available-slots', { params });
   return response.data;

@@ -1,62 +1,180 @@
 {
   "tasks": [
     {
-      "id": "e7234995-76a5-4bb0-8188-44fe360fabe6",
-      "name": "Update Rainey Donors on Home Page per Jordan Request",
-      "estimatedDuration": 30,
-      "sessionPreference": 120,
-      "status": "scheduled",
-      "scheduledSessions": [
-        {
-          "sessionId": "5c822d1b-0047-4835-ba1a-0ca482152804",
-          "calendarEventId": "08sqq7q82mp02hq0huq8uvv560",
-          "startTime": "2026-01-21T18:14:03.000Z",
-          "endTime": "2026-01-21T18:44:03.000Z",
-          "duration": 30,
-          "status": "scheduled"
-        }
-      ],
-      "createdAt": "2026-01-13T18:20:10.326Z",
-      "updatedAt": "2026-01-21T17:24:32.479Z"
-    },
-    {
-      "id": "9e05d2bf-a8ee-4a26-9cdf-b4ed5a776b48",
-      "name": "Video Updates for Rainey Institute",
+      "id": "a0147b05-1cf9-47cb-a918-b331871b554e",
+      "name": "BR Video - fire back up and find all the footage to get to CR",
       "estimatedDuration": 120,
       "sessionPreference": null,
       "status": "backlog",
       "scheduledSessions": [],
-      "createdAt": "2026-01-19T17:05:26.711Z",
-      "updatedAt": "2026-01-19T17:05:26.711Z"
+      "createdAt": "2026-02-17T17:53:49.124Z",
+      "updatedAt": "2026-02-17T17:53:49.124Z"
     },
     {
-      "id": "720896da-127a-4474-aa69-87b098a4f898",
-      "name": "Video Updates for Rainey Institute",
-      "estimatedDuration": 120,
-      "sessionPreference": 120,
-      "status": "backlog",
-      "scheduledSessions": [],
-      "createdAt": "2026-01-19T17:24:36.202Z",
-      "updatedAt": "2026-01-19T20:01:04.291Z"
-    },
-    {
-      "id": "b6c494cf-063b-48ff-a828-9c944b3d4012",
-      "name": "IRN - multi chapter member Sanda Brockway doesn't show up as a member eligible to get admin access.",
-      "estimatedDuration": 20,
+      "id": "7b5def5f-b5f5-49fe-bd26-e2cbfaf6e32d",
+      "name": "Pride one Project posts",
+      "estimatedDuration": 150,
       "sessionPreference": 120,
       "status": "scheduled",
       "scheduledSessions": [
         {
-          "sessionId": "1cf1a19e-7296-4566-82ba-102cc97e147d",
-          "calendarEventId": "4d3h94462ouv42fuotjvl4rrls",
-          "startTime": "2026-01-21T16:14:03.635Z",
-          "endTime": "2026-01-21T18:14:03.635Z",
+          "sessionId": "113e5760-c278-405b-8f7c-6cd0a32514fb",
+          "calendarEventId": "rb4na1u11husdfho3odld3gkfk",
+          "startTime": "2026-02-17T19:33:07.704Z",
+          "endTime": "2026-02-17T21:33:07.704Z",
           "duration": 120,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "15dadea3-b895-4818-9a79-07c539de9f43",
+          "calendarEventId": "joht0ajq1abv16upnb5fkn8rjc",
+          "startTime": "2026-02-18T14:30:00.000Z",
+          "endTime": "2026-02-18T15:00:00.000Z",
+          "duration": 30,
           "status": "scheduled"
         }
       ],
-      "createdAt": "2026-01-21T16:14:12.210Z",
-      "updatedAt": "2026-01-21T16:14:12.542Z"
+      "createdAt": "2026-02-17T19:33:07.430Z",
+      "updatedAt": "2026-02-17T19:33:08.659Z"
+    },
+    {
+      "id": "2c04fb19-d57f-4781-a304-f5d37a089cf3",
+      "name": "Pride One website audit",
+      "estimatedDuration": 120,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "d8d31959-0fe3-4443-86eb-445d18169ad4",
+          "calendarEventId": "ap74j5n09lu2g2vcgip1t54574",
+          "startTime": "2026-02-18T16:30:00.000Z",
+          "endTime": "2026-02-18T18:00:00.000Z",
+          "duration": 90,
+          "status": "scheduled"
+        },
+        {
+          "sessionId": "15c23d2f-2a3e-4070-a79e-6b788ab0c338",
+          "calendarEventId": "rultl9vq0iv7iu4drrkbq5a7p8",
+          "startTime": "2026-02-18T19:00:00.000Z",
+          "endTime": "2026-02-18T19:30:00.000Z",
+          "duration": 30,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-02-17T19:33:07.430Z",
+      "updatedAt": "2026-02-17T19:33:09.903Z"
+    },
+    {
+      "id": "013b4e44-bff2-46d9-9a63-19b211942c04",
+      "name": "Finish Reid Wiley update",
+      "estimatedDuration": 90,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "ebeb5dde-a571-4b2f-b6f3-89dd8fd51b4e",
+          "calendarEventId": "p62a49n5gt1f80rgpg9adq6rnc",
+          "startTime": "2026-02-18T19:30:00.000Z",
+          "endTime": "2026-02-18T21:00:00.000Z",
+          "duration": 90,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-02-17T19:33:07.430Z",
+      "updatedAt": "2026-02-17T19:33:10.588Z"
+    },
+    {
+      "id": "1c3a5c4a-696c-41f6-b0a5-95b33ed8b35c",
+      "name": "Trainor - get estimate and invoice to get that project started",
+      "estimatedDuration": 60,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "ebc391ef-2acc-4a29-a9e8-3b560efffd58",
+          "calendarEventId": "v7ijde0egves7omji1cc5a91i0",
+          "startTime": "2026-02-19T14:00:00.000Z",
+          "endTime": "2026-02-19T15:00:00.000Z",
+          "duration": 60,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-02-17T19:33:07.430Z",
+      "updatedAt": "2026-02-17T19:33:11.363Z"
+    },
+    {
+      "id": "6e786181-c245-486b-b441-cc4159cb5234",
+      "name": "Check E2PDF License expiration - for IVL or for PSC",
+      "estimatedDuration": 15,
+      "sessionPreference": 120,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "839c214b-c990-41ef-af19-a097e72f05ed",
+          "calendarEventId": "rkqj5p2odqahe0b26ddhrtf274",
+          "startTime": "2026-02-17T21:33:07.000Z",
+          "endTime": "2026-02-17T21:59:07.000Z",
+          "duration": 26,
+          "status": "scheduled"
+        }
+      ],
+      "createdAt": "2026-02-17T19:33:07.430Z",
+      "updatedAt": "2026-02-17T19:34:15.455Z"
+    },
+    {
+      "id": "69916c35-2d37-4939-b9df-dca68359c8f4",
+      "name": "Write unit tests for auth module",
+      "estimatedDuration": 75,
+      "sessionPreference": null,
+      "complexity": 4,
+      "status": "backlog",
+      "scheduledSessions": [],
+      "createdAt": "2026-02-23T15:55:47.672Z",
+      "updatedAt": "2026-02-23T15:55:47.672Z"
+    },
+    {
+      "id": "4829fed0-6690-4331-9d93-5247854e2cb4",
+      "name": "Write quarterly report",
+      "estimatedDuration": 165,
+      "sessionPreference": null,
+      "complexity": 4,
+      "status": "backlog",
+      "scheduledSessions": [],
+      "createdAt": "2026-02-23T15:55:47.672Z",
+      "updatedAt": "2026-02-23T15:55:47.672Z"
+    },
+    {
+      "id": "8723db96-345b-4ac1-a1c8-a7be067999cb",
+      "name": "Update resume",
+      "estimatedDuration": 30,
+      "sessionPreference": null,
+      "complexity": 3,
+      "status": "backlog",
+      "scheduledSessions": [],
+      "createdAt": "2026-02-23T15:55:47.672Z",
+      "updatedAt": "2026-02-23T15:55:47.672Z"
+    },
+    {
+      "id": "90f37359-d864-4593-9f18-16f84d594269",
+      "name": "Research project management tools",
+      "estimatedDuration": 15,
+      "sessionPreference": null,
+      "complexity": 5,
+      "status": "backlog",
+      "scheduledSessions": [],
+      "createdAt": "2026-02-23T15:55:47.672Z",
+      "updatedAt": "2026-02-23T15:55:47.672Z"
+    },
+    {
+      "id": "c611c105-18d2-447b-9708-744868de2719",
+      "name": "Fix login page bug",
+      "estimatedDuration": 15,
+      "sessionPreference": null,
+      "complexity": 5,
+      "status": "backlog",
+      "scheduledSessions": [],
+      "createdAt": "2026-02-23T15:55:47.672Z",
+      "updatedAt": "2026-02-23T15:55:47.672Z"
     }
   ]
 }

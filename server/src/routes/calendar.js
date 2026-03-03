@@ -29,7 +29,6 @@ router.get('/events', async (req, res, next) => {
 
     const events = await listEvents(client, timeMin, timeMax);
 
-    // Transform events for frontend
     const transformedEvents = events.map(event => ({
       id: event.id,
       summary: event.summary || 'No title',
@@ -76,18 +75,25 @@ router.get('/available-slots', async (req, res, next) => {
     const client = await getAuthenticatedClient();
     const preferences = await getPreferences();
 
-    const { start, end, minDuration } = req.query;
+    const { start, end, minDuration, override } = req.query;
 
     const timeMin = start ? parseISO(start) : startOfDay(new Date());
     const timeMax = end ? parseISO(end) : endOfDay(addDays(new Date(), 14)); // Default 2 weeks
 
     const busyPeriods = await getFreeBusy(client, timeMin, timeMax);
 
+    // Build override object if requested
+    const overrideConfig = override === 'true' ? {
+      skipDayCheck: true,
+      customHours: { start: '06:00', end: '22:00' }
+    } : null;
+
     const slots = findAvailableSlots(
       busyPeriods,
       preferences,
       { start: timeMin, end: timeMax },
-      minDuration ? parseInt(minDuration) : 30
+      minDuration ? parseInt(minDuration) : 30,
+      overrideConfig
     );
 
     res.json(slots);

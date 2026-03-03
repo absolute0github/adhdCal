@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, ChevronRight, Check, AlertCircle, AlertTriangle } from 'lucide-react';
 import { getAvailableSlots } from '../../services/calendarService';
 import { useTasks } from '../../context/TaskContext';
 import { formatDuration, generateUUID } from '../../utils/timeUtils';
@@ -18,6 +18,7 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [sessionLength, setSessionLength] = useState(120);
   const [scheduleMode, setScheduleMode] = useState('manual'); // 'next' or 'manual'
+  const [overrideMode, setOverrideMode] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
@@ -30,15 +31,15 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
     if (needsSessionPreference) {
       setStep('session-preference');
     } else {
-      fetchSlots(estimatedDuration);
+      fetchSlots(estimatedDuration, false);
     }
   }, [task]);
 
-  async function fetchSlots(minDuration) {
+  async function fetchSlots(minDuration, override = false) {
     setStep('loading');
     setError(null);
     try {
-      const data = await getAvailableSlots(null, null, Math.min(minDuration, 30));
+      const data = await getAvailableSlots(null, null, Math.min(minDuration, 30), override);
       setSlots(data);
 
       // Pre-select slots for "next available" mode
@@ -51,6 +52,13 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
       setError('Failed to load available slots: ' + err.message);
       setStep('slot-selection');
     }
+  }
+
+  function handleOverrideToggle() {
+    const newOverride = !overrideMode;
+    setOverrideMode(newOverride);
+    setSelectedSlots([]);
+    fetchSlots(needsSessionPreference ? Math.min(sessionLength, estimatedDuration) : estimatedDuration, newOverride);
   }
 
   function preselectSlots(availableSlots) {
@@ -83,7 +91,7 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
 
   function handleSessionPreference(length) {
     setSessionLength(length);
-    fetchSlots(Math.min(length, estimatedDuration));
+    fetchSlots(Math.min(length, estimatedDuration), overrideMode);
   }
 
   function toggleSlotSelection(slot, forceAdd = false) {
@@ -94,12 +102,11 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
         // Remove slot
         return prev.filter(s => s.id !== slot.id);
       } else if (existingIndex < 0) {
-        // Add slot - calculate remaining based on current selection
+        // Add slot
         const alreadyScheduled = task.scheduledSessions?.reduce((sum, s) => sum + s.duration, 0) || 0;
         const selectedDuration = prev.reduce((sum, s) => sum + s.duration, 0);
         const remainingToSchedule = estimatedDuration - alreadyScheduled - selectedDuration;
 
-        // Allow selecting even if we've covered the duration (user might want to pick different slots)
         const usableDuration = Math.min(slot.duration, sessionLength, Math.max(remainingToSchedule, slot.duration));
 
         const startTime = new Date(slot.start);
@@ -215,6 +222,29 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
                 </div>
               </div>
 
+              {/* Override Toggle */}
+              <div className="mb-4">
+                <button
+                  onClick={handleOverrideToggle}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all w-full ${
+                    overrideMode
+                      ? 'bg-amber-50 border border-amber-300 text-amber-800'
+                      : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <AlertTriangle className={`w-4 h-4 ${overrideMode ? 'text-amber-500' : 'text-gray-400'}`} />
+                  <span className="font-medium">Allow outside normal hours</span>
+                  <div className={`ml-auto w-10 h-5 rounded-full transition-colors ${overrideMode ? 'bg-amber-500' : 'bg-gray-300'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${overrideMode ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
+                  </div>
+                </button>
+                {overrideMode && (
+                  <p className="text-xs text-amber-600 mt-1 ml-1">
+                    Showing slots from 6 AM to 10 PM, all days of the week
+                  </p>
+                )}
+              </div>
+
               {/* Mode Selection */}
               <div className="flex gap-2 mb-4">
                 <button
@@ -258,7 +288,10 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
                   <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-600">No available time slots found</p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Try adjusting your working hours in preferences
+                    {!overrideMode
+                      ? 'Try enabling "Allow outside normal hours" above'
+                      : 'Try adjusting your working hours in preferences'
+                    }
                   </p>
                 </div>
               ) : (
@@ -279,13 +312,18 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
                         className={`w-full p-3 rounded-lg border text-left transition-all cursor-pointer ${
                           isSelected
                             ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            : slot.isOverride
+                              ? 'border-amber-200 hover:border-amber-300 bg-amber-50/30'
+                              : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-gray-900">
                               {slot.displayDate}
+                              {slot.isOverride && (
+                                <span className="ml-2 text-xs text-amber-600 font-normal">outside normal hours</span>
+                              )}
                             </p>
                             <p className="text-sm text-gray-600">
                               {slot.displayTime}

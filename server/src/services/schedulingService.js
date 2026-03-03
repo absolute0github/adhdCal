@@ -10,7 +10,8 @@ import {
   isAfter,
   isBefore,
   differenceInMinutes,
-  format
+  format,
+  getDay
 } from 'date-fns';
 import {
   getTaskById,
@@ -35,18 +36,46 @@ function setTimeOnDate(date, timeStr) {
   return setMinutes(setHours(date, hours), minutes);
 }
 
+// Map JS getDay() (0=Sun) to our day keys
+const DAY_INDEX_TO_KEY = {
+  0: 'sunday',
+  1: 'monday',
+  2: 'tuesday',
+  3: 'wednesday',
+  4: 'thursday',
+  5: 'friday',
+  6: 'saturday'
+};
+
+// Check if a date falls on a working day
+function isWorkingDay(date, workingDays) {
+  if (!workingDays) return true; // Default: all days are working days
+  const dayKey = DAY_INDEX_TO_KEY[getDay(date)];
+  return workingDays[dayKey] !== false; // Default to true if not specified
+}
+
 // Find available time slots between busy periods
-export function findAvailableSlots(busyPeriods, preferences, dateRange, minDuration = 30) {
+// override: { skipDayCheck: true, customHours: { start, end } }
+export function findAvailableSlots(busyPeriods, preferences, dateRange, minDuration = 30, override = null) {
   const slots = [];
-  const { workingHours } = preferences;
+  const { workingHours, workingDays } = preferences;
+
+  // Use override hours if provided, otherwise use preferences
+  const effectiveHours = override?.customHours || workingHours;
 
   // Process each day in the range
   let currentDate = startOfDay(dateRange.start);
   const endDate = endOfDay(dateRange.end);
 
   while (isBefore(currentDate, endDate)) {
-    const dayStart = setTimeOnDate(currentDate, workingHours.start);
-    const dayEnd = setTimeOnDate(currentDate, workingHours.end);
+    // Check if this is a working day (skip check if override)
+    if (!override?.skipDayCheck && !isWorkingDay(currentDate, workingDays)) {
+      currentDate = addDays(currentDate, 1);
+      continue;
+    }
+
+    const dayStart = setTimeOnDate(currentDate, effectiveHours.start);
+    const dayEnd = setTimeOnDate(currentDate, effectiveHours.end);
 
     // Skip if day start is in the past
     const now = new Date();
@@ -79,7 +108,8 @@ export function findAvailableSlots(busyPeriods, preferences, dateRange, minDurat
               duration: slotDuration,
               date: format(currentDate, 'yyyy-MM-dd'),
               displayDate: format(currentDate, 'EEE, MMM d'),
-              displayTime: `${format(currentTime, 'h:mm a')} - ${format(busy.start, 'h:mm a')}`
+              displayTime: `${format(currentTime, 'h:mm a')} - ${format(busy.start, 'h:mm a')}`,
+              isOverride: !!override
             });
           }
         }
@@ -100,7 +130,8 @@ export function findAvailableSlots(busyPeriods, preferences, dateRange, minDurat
             duration: slotDuration,
             date: format(currentDate, 'yyyy-MM-dd'),
             displayDate: format(currentDate, 'EEE, MMM d'),
-            displayTime: `${format(currentTime, 'h:mm a')} - ${format(dayEnd, 'h:mm a')}`
+            displayTime: `${format(currentTime, 'h:mm a')} - ${format(dayEnd, 'h:mm a')}`,
+            isOverride: !!override
           });
         }
       }
@@ -140,7 +171,8 @@ export function splitTaskIntoSessions(task, availableSlots, sessionLength) {
         duration: usableDuration,
         date: slot.date,
         displayDate: slot.displayDate,
-        displayTime: `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`
+        displayTime: `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`,
+        isOverride: slot.isOverride || false
       });
 
       remainingDuration -= usableDuration;
@@ -188,7 +220,8 @@ export async function scheduleTask(taskId, slots, sessionPreference) {
       startTime: slot.startTime,
       endTime: slot.endTime,
       duration: slot.duration,
-      status: 'scheduled'
+      status: 'scheduled',
+      isOverride: slot.isOverride || false
     });
   }
 
@@ -239,7 +272,6 @@ export async function unscheduleSession(taskId, sessionId) {
       await deleteEvent(client, session.calendarEventId);
     } catch (error) {
       console.error('Failed to delete calendar event:', error);
-      // Continue even if calendar deletion fails
     }
   }
 
