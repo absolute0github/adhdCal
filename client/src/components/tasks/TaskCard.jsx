@@ -10,6 +10,14 @@ const complexityColors = {
   5: 'bg-red-100 text-red-700',
 };
 
+const importanceBadgeColors = {
+  1: 'bg-gray-100 text-gray-600',
+  2: 'bg-blue-100 text-blue-600',
+  3: 'bg-yellow-100 text-yellow-700',
+  4: 'bg-orange-100 text-orange-700',
+  5: 'bg-red-100 text-red-700',
+};
+
 export default function TaskCard({
   task,
   onSchedule,
@@ -73,7 +81,7 @@ export default function TaskCard({
           )}
           <div className="flex-1 min-w-0">
             <h3 className={`font-medium truncate ${isCompleted ? 'line-through text-gray-400' : 'text-gray-900'}`}>{task.name}</h3>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className="flex items-center gap-1 text-sm text-gray-500">
                 <Clock className="w-4 h-4" />
                 {formatDuration(task.estimatedDuration)}
@@ -81,6 +89,11 @@ export default function TaskCard({
               <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[task.status]}`}>
                 {statusLabels[task.status]}
               </span>
+              {task.importance && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${importanceBadgeColors[task.importance] || importanceBadgeColors[3]}`}>
+                  P{task.importance}
+                </span>
+              )}
               {task.complexity && (
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${complexityColors[task.complexity] || complexityColors[3]}`}>
                   C{task.complexity}

@@ -11,6 +11,14 @@ const complexityColors = {
   5: 'bg-red-100 text-red-700',
 };
 
+const importanceBadgeColors = {
+  1: 'bg-gray-100 text-gray-600',
+  2: 'bg-blue-100 text-blue-600',
+  3: 'bg-yellow-100 text-yellow-700',
+  4: 'bg-orange-100 text-orange-700',
+  5: 'bg-red-100 text-red-700',
+};
+
 export default function KanbanCard({ task, onEdit, onDelete, onComplete, overlay }) {
   const {
     attributes,
@@ -57,11 +65,16 @@ export default function KanbanCard({ task, onEdit, onDelete, onComplete, overlay
         {task.name}
       </p>
 
-      <div className="flex items-center gap-2 mt-1.5">
+      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
         <span className="flex items-center gap-1 text-xs text-gray-500">
           <Clock className="w-3 h-3" />
           {formatDuration(task.estimatedDuration)}
         </span>
+        {task.importance && (
+          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium leading-none ${importanceBadgeColors[task.importance] || importanceBadgeColors[3]}`}>
+            P{task.importance}
+          </span>
+        )}
         {task.complexity && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium leading-none ${complexityColors[task.complexity] || complexityColors[3]}`}>
             C{task.complexity}

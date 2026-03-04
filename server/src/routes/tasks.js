@@ -49,7 +49,7 @@ router.get('/:id', async (req, res, next) => {
 // Create new task (add to backlog)
 router.post('/', async (req, res, next) => {
   try {
-    const { name, estimatedDuration, sessionPreference, complexity } = req.body;
+    const { name, estimatedDuration, sessionPreference, complexity, importance } = req.body;
 
     if (!name || !estimatedDuration) {
       return res.status(400).json({ error: 'Name and estimatedDuration are required' });
@@ -61,6 +61,7 @@ router.post('/', async (req, res, next) => {
       estimatedDuration: parseInt(estimatedDuration),
       sessionPreference: sessionPreference ? parseInt(sessionPreference) : null,
       complexity: complexity ? Math.min(5, Math.max(1, parseInt(complexity))) : 3,
+      importance: importance ? Math.min(5, Math.max(1, parseInt(importance))) : 3,
       status: 'backlog',
       scheduledSessions: [],
       createdAt: new Date().toISOString(),
@@ -130,6 +131,7 @@ router.post('/batch', authMiddleware, async (req, res, next) => {
         estimatedDuration: parseInt(taskData.estimatedDuration),
         sessionPreference: taskData.sessionPreference ? parseInt(taskData.sessionPreference) : null,
         complexity: taskData.complexity ? Math.min(5, Math.max(1, parseInt(taskData.complexity))) : 3,
+        importance: taskData.importance ? Math.min(5, Math.max(1, parseInt(taskData.importance))) : 3,
         status: 'backlog',
         scheduledSessions: [],
         createdAt: now,
@@ -155,7 +157,7 @@ router.post('/batch', authMiddleware, async (req, res, next) => {
 // Update task
 router.put('/:id', async (req, res, next) => {
   try {
-    const { name, estimatedDuration, sessionPreference, status, complexity } = req.body;
+    const { name, estimatedDuration, sessionPreference, status, complexity, importance } = req.body;
     const updates = {};
 
     if (name !== undefined) updates.name = name;
@@ -169,6 +171,7 @@ router.put('/:id', async (req, res, next) => {
       updates.status = status;
     }
     if (complexity !== undefined) updates.complexity = Math.min(5, Math.max(1, parseInt(complexity)));
+    if (importance !== undefined) updates.importance = Math.min(5, Math.max(1, parseInt(importance)));
 
     const task = await updateTask(req.params.id, updates);
     res.json(task);

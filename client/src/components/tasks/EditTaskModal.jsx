@@ -2,10 +2,27 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { parseDuration, formatDuration } from '../../utils/timeUtils';
 
+const importanceLabels = { 1: 'Low', 2: 'Low-Med', 3: 'Medium', 4: 'High', 5: 'Critical' };
+const importanceActiveColors = {
+  1: 'bg-gray-500 text-white',
+  2: 'bg-blue-500 text-white',
+  3: 'bg-yellow-500 text-white',
+  4: 'bg-orange-500 text-white',
+  5: 'bg-red-500 text-white',
+};
+const importanceColors = {
+  1: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+  2: 'bg-blue-100 text-blue-600 hover:bg-blue-200',
+  3: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+  4: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
+  5: 'bg-red-100 text-red-700 hover:bg-red-200',
+};
+
 export default function EditTaskModal({ task, onSave, onClose }) {
   const [name, setName] = useState(task.name);
   const [duration, setDuration] = useState(formatDuration(task.estimatedDuration));
   const [complexity, setComplexity] = useState(task.complexity || 3);
+  const [importance, setImportance] = useState(task.importance || 3);
   const [error, setError] = useState(null);
 
   function handleSubmit(e) {
@@ -26,7 +43,8 @@ export default function EditTaskModal({ task, onSave, onClose }) {
     onSave(task.id, {
       name: name.trim(),
       estimatedDuration: durationMinutes,
-      complexity
+      complexity,
+      importance
     });
   }
 
@@ -71,6 +89,33 @@ export default function EditTaskModal({ task, onSave, onClose }) {
             />
           </div>
 
+          {/* Importance */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Importance
+            </label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map(level => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setImportance(level)}
+                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                    importance === level
+                      ? importanceActiveColors[level]
+                      : importanceColors[level]
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+              <span className="ml-2 text-xs text-gray-400 self-center">
+                {importanceLabels[importance]}
+              </span>
+            </div>
+          </div>
+
+          {/* Complexity */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Complexity

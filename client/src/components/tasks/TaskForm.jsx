@@ -9,13 +9,30 @@ import BrainDumpForm from './BrainDumpForm';
 import ProFeatureBadge from '../ui/ProFeatureBadge';
 import UpgradeModal from '../ui/UpgradeModal';
 
+const importanceLabels = { 1: 'Low', 2: 'Low-Med', 3: 'Medium', 4: 'High', 5: 'Critical' };
+const importanceColors = {
+  1: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+  2: 'bg-blue-100 text-blue-600 hover:bg-blue-200',
+  3: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+  4: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
+  5: 'bg-red-100 text-red-700 hover:bg-red-200',
+};
+const importanceActiveColors = {
+  1: 'bg-gray-500 text-white',
+  2: 'bg-blue-500 text-white',
+  3: 'bg-yellow-500 text-white',
+  4: 'bg-orange-500 text-white',
+  5: 'bg-red-500 text-white',
+};
+
 export default function TaskForm({ onScheduleNew }) {
   const { addTask, autoScheduleTask, refreshTasks } = useTasks();
   const { isAuthenticated, hasFeatureAccess } = useAuth();
-  const [mode, setMode] = useState('single'); // 'single' or 'brainDump'
+  const [mode, setMode] = useState('single');
   const [name, setName] = useState('');
   const [duration, setDuration] = useState('');
   const [complexity, setComplexity] = useState(3);
+  const [importance, setImportance] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -40,32 +57,34 @@ export default function TaskForm({ onScheduleNew }) {
       return;
     }
 
-    // For "Add & Schedule", pass unsaved task data to wizard (don't create yet)
     if (shouldSchedule && onScheduleNew) {
       onScheduleNew({
         name: name.trim(),
         estimatedDuration: durationMinutes,
         complexity,
-        isNew: true  // Flag to indicate this task needs to be created
+        importance,
+        isNew: true
       });
       setName('');
       setDuration('');
       setComplexity(3);
+      setImportance(3);
       return;
     }
 
-    // For "Add to Backlog", create the task immediately
     setIsSubmitting(true);
     try {
       await addTask({
         name: name.trim(),
         estimatedDuration: durationMinutes,
-        complexity
+        complexity,
+        importance
       });
 
       setName('');
       setDuration('');
       setComplexity(3);
+      setImportance(3);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -94,13 +113,15 @@ export default function TaskForm({ onScheduleNew }) {
       const newTask = await addTask({
         name: name.trim(),
         estimatedDuration: durationMinutes,
-        complexity
+        complexity,
+        importance
       });
       const result = await autoScheduleTask(newTask.id);
       setSuccessMessage(`Scheduled ${result.sessionsCreated} session(s) for "${name.trim()}"`);
       setName('');
       setDuration('');
       setComplexity(3);
+      setImportance(3);
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       setError(err.response?.data?.error || err.message);
@@ -214,6 +235,33 @@ export default function TaskForm({ onScheduleNew }) {
                 </div>
               </div>
 
+              {/* Importance */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Importance
+                </label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map(level => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setImportance(level)}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                        importance === level
+                          ? importanceActiveColors[level]
+                          : importanceColors[level]
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                  <span className="ml-2 text-xs text-gray-400 self-center">
+                    {importanceLabels[importance]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Complexity */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Complexity
