@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, X, Trash2, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTasks } from '../../context/TaskContext';
-import { getTodayEvents, getEvents } from '../../services/calendarService';
+import { getTodayEvents, getEvents, deleteEvent } from '../../services/calendarService';
 import { formatTime, isToday } from '../../utils/timeUtils';
 
 export default function Sidebar({ isMobile = false }) {
@@ -96,6 +96,17 @@ export default function Sidebar({ isMobile = false }) {
     }
   }
 
+  async function handleDeleteEvent(eventId) {
+    if (window.confirm('Delete this event from your Google Calendar?')) {
+      try {
+        await deleteEvent(eventId);
+        fetchEvents();
+      } catch (err) {
+        alert('Failed to delete event: ' + (err.response?.data?.error || err.message));
+      }
+    }
+  }
+
   const baseClasses = isMobile
     ? "flex-1 bg-gray-50 flex flex-col h-full overflow-hidden"
     : "w-80 bg-gray-50 border-r border-gray-200 flex flex-col";
@@ -182,16 +193,32 @@ export default function Sidebar({ isMobile = false }) {
                 event={event}
                 sessionInfo={sessionLookup[event.id]}
                 onRemove={handleRemoveSession}
+                onDelete={handleDeleteEvent}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Google Calendar Link */}
+      {isAuthenticated && (
+        <div className="p-4 border-t border-gray-200">
+          <a
+            href="https://calendar.google.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Open Google Calendar
+          </a>
+        </div>
+      )}
     </aside>
   );
 }
 
-function EventCard({ event, sessionInfo, onRemove }) {
+function EventCard({ event, sessionInfo, onRemove, onDelete }) {
   const startTime = event.allDay ? 'All day' : formatTime(event.start);
   const endTime = event.allDay ? '' : formatTime(event.end);
 
@@ -212,6 +239,16 @@ function EventCard({ event, sessionInfo, onRemove }) {
 
   const colorClass = colorMap[event.colorId] || 'bg-blue-50 border-blue-200';
 
+  function handleDelete() {
+    if (sessionInfo && onRemove) {
+      // If it's a scheduled session, unschedule it (removes from both calendar and task)
+      onRemove(sessionInfo.taskId, sessionInfo.sessionId);
+    } else if (onDelete) {
+      // Otherwise, delete the event directly from Google Calendar
+      onDelete(event.id);
+    }
+  }
+
   return (
     <div className={`p-3 rounded-lg border-l-4 ${colorClass} group relative`}>
       <div className="flex items-start justify-between gap-2">
@@ -223,15 +260,13 @@ function EventCard({ event, sessionInfo, onRemove }) {
             {startTime}{endTime && ` - ${endTime}`}
           </p>
         </div>
-        {sessionInfo && onRemove && (
-          <button
-            onClick={() => onRemove(sessionInfo.taskId, sessionInfo.sessionId)}
-            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all"
-            title="Remove from calendar"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <button
+          onClick={handleDelete}
+          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all"
+          title={sessionInfo ? "Remove session from calendar" : "Delete event"}
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
