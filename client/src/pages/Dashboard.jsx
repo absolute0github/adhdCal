@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { List, Columns } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { List, Columns, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTasks } from '../context/TaskContext';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskList from '../components/tasks/TaskList';
 import KanbanBoard from '../components/tasks/KanbanBoard';
@@ -8,10 +9,21 @@ import ScheduleWizard from '../components/scheduling/ScheduleWizard';
 
 export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { refreshTasks } = useTasks();
   const [schedulingTask, setSchedulingTask] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem('adhdcal-view-mode') || 'list'
   );
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshTasks();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshTasks]);
 
   function handleSchedule(task) {
     setSchedulingTask(task);
@@ -37,8 +49,17 @@ export default function Dashboard() {
       {/* Task Form */}
       <TaskForm onScheduleNew={handleSchedule} />
 
-      {/* View Toggle */}
+      {/* View Toggle & Refresh */}
       <div className="flex items-center justify-end gap-1">
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50 mr-2"
+          title="Refresh tasks"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
         <button
           onClick={() => handleViewChange('list')}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${

@@ -1,18 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import {
   parseISO,
-  startOfDay,
-  endOfDay,
   addDays,
   addMinutes,
-  setHours,
-  setMinutes,
   isAfter,
   isBefore,
-  differenceInMinutes,
-  format,
-  getDay
+  differenceInMinutes
 } from 'date-fns';
+import { toZonedTime, fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import {
   getTaskById,
   updateTask,
@@ -30,10 +25,30 @@ function parseTimeString(timeStr) {
   return { hours, minutes };
 }
 
-// Set time on a date
-function setTimeOnDate(date, timeStr) {
+// Set time on a date in a specific timezone
+// Creates a UTC Date that corresponds to the given hours:minutes in the target timezone
+function setTimeOnDateInTz(date, timeStr, timezone) {
   const { hours, minutes } = parseTimeString(timeStr);
-  return setMinutes(setHours(date, hours), minutes);
+  // Get the date in the user's timezone
+  const zonedDate = toZonedTime(date, timezone);
+  // Set hours/minutes on the zoned date
+  zonedDate.setHours(hours, minutes, 0, 0);
+  // Convert back to UTC
+  return fromZonedTime(zonedDate, timezone);
+}
+
+// Get start of day in a specific timezone
+function startOfDayInTz(date, timezone) {
+  const zonedDate = toZonedTime(date, timezone);
+  zonedDate.setHours(0, 0, 0, 0);
+  return fromZonedTime(zonedDate, timezone);
+}
+
+// Get end of day in a specific timezone
+function endOfDayInTz(date, timezone) {
+  const zonedDate = toZonedTime(date, timezone);
+  zonedDate.setHours(23, 59, 59, 999);
+  return fromZonedTime(zonedDate, timezone);
 }
 
 // Map JS getDay() (0=Sun) to our day keys
@@ -47,10 +62,11 @@ const DAY_INDEX_TO_KEY = {
   6: 'saturday'
 };
 
-// Check if a date falls on a working day
-function isWorkingDay(date, workingDays) {
+// Check if a date falls on a working day (in user's timezone)
+function isWorkingDay(date, workingDays, timezone) {
   if (!workingDays) return true; // Default: all days are working days
-  const dayKey = DAY_INDEX_TO_KEY[getDay(date)];
+  const zonedDate = toZonedTime(date, timezone);
+  const dayKey = DAY_INDEX_TO_KEY[zonedDate.getDay()];
   return workingDays[dayKey] !== false; // Default to true if not specified
 }
 
@@ -59,23 +75,24 @@ function isWorkingDay(date, workingDays) {
 export function findAvailableSlots(busyPeriods, preferences, dateRange, minDuration = 30, override = null) {
   const slots = [];
   const { workingHours, workingDays } = preferences;
+  const timezone = preferences.timezone || 'America/New_York';
 
   // Use override hours if provided, otherwise use preferences
   const effectiveHours = override?.customHours || workingHours;
 
   // Process each day in the range
-  let currentDate = startOfDay(dateRange.start);
-  const endDate = endOfDay(dateRange.end);
+  let currentDate = startOfDayInTz(dateRange.start, timezone);
+  const endDate = endOfDayInTz(dateRange.end, timezone);
 
   while (isBefore(currentDate, endDate)) {
     // Check if this is a working day (skip check if override)
-    if (!override?.skipDayCheck && !isWorkingDay(currentDate, workingDays)) {
+    if (!override?.skipDayCheck && !isWorkingDay(currentDate, workingDays, timezone)) {
       currentDate = addDays(currentDate, 1);
       continue;
     }
 
-    const dayStart = setTimeOnDate(currentDate, effectiveHours.start);
-    const dayEnd = setTimeOnDate(currentDate, effectiveHours.end);
+    const dayStart = setTimeOnDateInTz(currentDate, effectiveHours.start, timezone);
+    const dayEnd = setTimeOnDateInTz(currentDate, effectiveHours.end, timezone);
 
     // Skip if day start is in the past
     const now = new Date();
@@ -106,9 +123,9 @@ export function findAvailableSlots(busyPeriods, preferences, dateRange, minDurat
               start: currentTime.toISOString(),
               end: busy.start.toISOString(),
               duration: slotDuration,
-              date: format(currentDate, 'yyyy-MM-dd'),
-              displayDate: format(currentDate, 'EEE, MMM d'),
-              displayTime: `${format(currentTime, 'h:mm a')} - ${format(busy.start, 'h:mm a')}`,
+              date: formatInTimeZone(currentDate, timezone, 'yyyy-MM-dd'),
+              displayDate: formatInTimeZone(currentDate, timezone, 'EEE, MMM d'),
+              displayTime: `${formatInTimeZone(currentTime, timezone, 'h:mm a')} - ${formatInTimeZone(busy.start, timezone, 'h:mm a')}`,
               isOverride: !!override
             });
           }
@@ -128,9 +145,9 @@ export function findAvailableSlots(busyPeriods, preferences, dateRange, minDurat
             start: currentTime.toISOString(),
             end: dayEnd.toISOString(),
             duration: slotDuration,
-            date: format(currentDate, 'yyyy-MM-dd'),
-            displayDate: format(currentDate, 'EEE, MMM d'),
-            displayTime: `${format(currentTime, 'h:mm a')} - ${format(dayEnd, 'h:mm a')}`,
+            date: formatInTimeZone(currentDate, timezone, 'yyyy-MM-dd'),
+            displayDate: formatInTimeZone(currentDate, timezone, 'EEE, MMM d'),
+            displayTime: `${formatInTimeZone(currentTime, timezone, 'h:mm a')} - ${formatInTimeZone(dayEnd, timezone, 'h:mm a')}`,
             isOverride: !!override
           });
         }
@@ -144,7 +161,7 @@ export function findAvailableSlots(busyPeriods, preferences, dateRange, minDurat
 }
 
 // Split a task into sessions based on available slots
-export function splitTaskIntoSessions(task, availableSlots, sessionLength) {
+export function splitTaskIntoSessions(task, availableSlots, sessionLength, timezone = 'America/New_York') {
   const sessions = [];
   let remainingDuration = task.estimatedDuration;
   const maxSession = Math.min(sessionLength, 240); // Cap at 4 hours
@@ -171,7 +188,7 @@ export function splitTaskIntoSessions(task, availableSlots, sessionLength) {
         duration: usableDuration,
         date: slot.date,
         displayDate: slot.displayDate,
-        displayTime: `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`,
+        displayTime: `${formatInTimeZone(startTime, timezone, 'h:mm a')} - ${formatInTimeZone(endTime, timezone, 'h:mm a')}`,
         isOverride: slot.isOverride || false
       });
 

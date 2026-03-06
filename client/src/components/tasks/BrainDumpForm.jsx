@@ -13,6 +13,22 @@ const complexityColors = {
   5: 'bg-red-500 text-white',
 };
 
+const importanceLabels = { 1: 'Low', 2: 'Low-Med', 3: 'Medium', 4: 'High', 5: 'Critical' };
+const importanceColors = {
+  1: 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+  2: 'bg-blue-100 text-blue-600 hover:bg-blue-200',
+  3: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+  4: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
+  5: 'bg-red-100 text-red-700 hover:bg-red-200',
+};
+const importanceActiveColors = {
+  1: 'bg-gray-500 text-white',
+  2: 'bg-blue-500 text-white',
+  3: 'bg-yellow-500 text-white',
+  4: 'bg-orange-500 text-white',
+  5: 'bg-red-500 text-white',
+};
+
 export default function BrainDumpForm({ onBack, onScheduleNew }) {
   const { refreshTasks, autoScheduleTask } = useTasks();
   const [step, setStep] = useState('input'); // 'input', 'review', or 'auto-scheduling'
@@ -39,7 +55,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
       name,
       duration: '',
       durationMinutes: null,
-      complexity: 3
+      complexity: 3,
+      importance: 3
     }));
 
     setParsedTasks(tasks);
@@ -68,6 +85,13 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
   function updateTaskComplexity(id, complexity) {
     setParsedTasks(prev =>
       prev.map(task => task.id === id ? { ...task, complexity } : task)
+    );
+  }
+
+  // Update importance for a specific task
+  function updateTaskImportance(id, importance) {
+    setParsedTasks(prev =>
+      prev.map(task => task.id === id ? { ...task, importance } : task)
     );
   }
 
@@ -101,7 +125,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
       const tasksToCreate = parsedTasks.map(task => ({
         name: task.name,
         estimatedDuration: task.durationMinutes,
-        complexity: task.complexity || 3
+        complexity: task.complexity || 3,
+        importance: task.importance || 3
       }));
 
       await createTasksBatch(tasksToCreate);
@@ -132,7 +157,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
       const tasksToCreate = parsedTasks.map(task => ({
         name: task.name,
         estimatedDuration: task.durationMinutes,
-        complexity: task.complexity || 3
+        complexity: task.complexity || 3,
+        importance: task.importance || 3
       }));
 
       const result = await createTasksBatch(tasksToCreate);
@@ -173,7 +199,8 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
       const tasksToCreate = parsedTasks.map(task => ({
         name: task.name,
         estimatedDuration: task.durationMinutes,
-        complexity: task.complexity || 3
+        complexity: task.complexity || 3,
+        importance: task.importance || 3
       }));
 
       const result = await createTasksBatch(tasksToCreate);
@@ -302,53 +329,82 @@ export default function BrainDumpForm({ onBack, onScheduleNew }) {
           {parsedTasks.map(task => (
             <div
               key={task.id}
-              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+              className="p-3 bg-gray-50 rounded-lg space-y-2"
             >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {task.name}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {task.name}
+                  </p>
+                </div>
+
+                <div className="relative flex-shrink-0 w-32">
+                  <input
+                    type="text"
+                    value={task.duration}
+                    onChange={(e) => updateTaskDuration(task.id, e.target.value)}
+                    placeholder="e.g., 1h 30m"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                  {task.durationMinutes && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                      {formatDuration(task.durationMinutes)}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => removeTask(task.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="relative flex-shrink-0 w-32">
-                <input
-                  type="text"
-                  value={task.duration}
-                  onChange={(e) => updateTaskDuration(task.id, e.target.value)}
-                  placeholder="e.g., 1h 30m"
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-                {task.durationMinutes && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                    {formatDuration(task.durationMinutes)}
-                  </span>
-                )}
-              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500">Importance:</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map(level => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => updateTaskImportance(task.id, level)}
+                        className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
+                          task.importance === level
+                            ? importanceActiveColors[level]
+                            : importanceColors[level]
+                        }`}
+                        title={`${importanceLabels[level]}`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-400">{importanceLabels[task.importance]}</span>
+                </div>
 
-              <div className="flex gap-0.5 flex-shrink-0">
-                {[1, 2, 3, 4, 5].map(level => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => updateTaskComplexity(task.id, level)}
-                    className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
-                      task.complexity === level
-                        ? complexityColors[level]
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                    title={`Complexity ${level}`}
-                  >
-                    {level}
-                  </button>
-                ))}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500">Complexity:</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map(level => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => updateTaskComplexity(task.id, level)}
+                        className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
+                          task.complexity === level
+                            ? complexityColors[level]
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                        title={`Complexity ${level}`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-
-              <button
-                onClick={() => removeTask(task.id)}
-                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
             </div>
           ))}
         </div>
