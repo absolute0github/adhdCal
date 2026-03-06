@@ -61,16 +61,17 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
     fetchSlots(needsSessionPreference ? Math.min(sessionLength, estimatedDuration) : estimatedDuration, newOverride);
   }
 
-  function preselectSlots(availableSlots) {
+  function computeNextAvailableSlots(availableSlots) {
     const selected = [];
     let remainingDuration = estimatedDuration;
+    const minSession = Math.min(30, estimatedDuration); // Allow short sessions for short tasks
 
     for (const slot of availableSlots) {
       if (remainingDuration <= 0) break;
 
       const usableDuration = Math.min(slot.duration, sessionLength, remainingDuration);
 
-      if (usableDuration >= 30) {
+      if (usableDuration >= minSession) {
         const startTime = new Date(slot.start);
         const endTime = new Date(startTime.getTime() + usableDuration * 60000);
 
@@ -86,7 +87,41 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
       }
     }
 
-    setSelectedSlots(selected);
+    return selected;
+  }
+
+  function preselectSlots(availableSlots) {
+    setSelectedSlots(computeNextAvailableSlots(availableSlots));
+  }
+
+  async function handleScheduleNextAvailable() {
+    const slotsToSchedule = computeNextAvailableSlots(slots);
+    if (slotsToSchedule.length === 0) {
+      setError('No available time slots to schedule');
+      return;
+    }
+
+    setSelectedSlots(slotsToSchedule);
+    setStep('scheduling');
+    setError(null);
+
+    try {
+      let taskToSchedule = task;
+
+      if (task.isNew) {
+        taskToSchedule = await addTask({
+          name: task.name,
+          estimatedDuration: estimatedDuration
+        });
+      }
+
+      const schedulingResult = await scheduleTask(taskToSchedule.id, slotsToSchedule, sessionLength);
+      setResult(schedulingResult);
+      setStep('done');
+    } catch (err) {
+      setError('Failed to schedule: ' + err.message);
+      setStep('slot-selection');
+    }
   }
 
   function handleSessionPreference(length) {
@@ -250,7 +285,7 @@ export default function ScheduleWizard({ task: taskProp, onClose }) {
                 <button
                   onClick={() => {
                     setScheduleMode('next');
-                    preselectSlots(slots);
+                    handleScheduleNextAvailable();
                   }}
                   className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                     scheduleMode === 'next'
