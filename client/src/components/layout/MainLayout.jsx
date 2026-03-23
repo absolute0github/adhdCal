@@ -7,7 +7,7 @@ export default function MainLayout({ children }) {
   const [activeTab, setActiveTab] = useState('tasks');
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
       <Header />
 
       {/* Desktop layout */}
