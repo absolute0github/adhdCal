@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Brain, LogOut, Calendar, Settings, Shield, Moon, Sun } from 'lucide-react';
+import { Brain, LogOut, Calendar, Settings, Shield, Moon, Sun, Timer } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import UserPreferencesModal from '../settings/UserPreferencesModal';
@@ -45,6 +45,16 @@ export default function Header() {
                 <span className="hidden sm:inline">Admin</span>
               </Link>
             )}
+
+            {/* Focus Timer Link */}
+            <Link
+              to="/app/focus"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+              title="Focus Timer"
+            >
+              <Timer className="w-4 h-4" />
+              <span className="hidden sm:inline">Focus</span>
+            </Link>
 
             {/* Dark Mode Toggle */}
             <button

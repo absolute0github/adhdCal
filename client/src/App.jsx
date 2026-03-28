@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
+import FocusPage from './pages/FocusPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -91,6 +92,18 @@ function App() {
               <TaskProvider>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </TaskProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/focus"
+          element={
+            <ProtectedRoute>
+              <TaskProvider>
+                <MainLayout>
+                  <FocusPage />
                 </MainLayout>
               </TaskProvider>
             </ProtectedRoute>
