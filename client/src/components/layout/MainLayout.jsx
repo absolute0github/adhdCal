@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
+import ReminderBanner from '../notifications/ReminderBanner';
 
 export default function MainLayout({ children }) {
   const [activeTab, setActiveTab] = useState('tasks');
@@ -9,6 +10,7 @@ export default function MainLayout({ children }) {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header />
+      <ReminderBanner />
 
       {/* Desktop layout */}
       <div className="hidden md:flex flex-1 overflow-hidden">
