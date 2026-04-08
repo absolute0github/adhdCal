@@ -6,6 +6,7 @@ import MainLayout from './components/layout/MainLayout';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import SettingsPage from './pages/SettingsPage';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 
@@ -91,6 +92,18 @@ function App() {
               <TaskProvider>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </TaskProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <TaskProvider>
+                <MainLayout>
+                  <SettingsPage />
                 </MainLayout>
               </TaskProvider>
             </ProtectedRoute>

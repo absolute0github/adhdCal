@@ -1,15 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Brain, LogOut, Calendar, Settings, Shield, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import UserPreferencesModal from '../settings/UserPreferencesModal';
 
 export default function Header() {
   const { user, signOut, googleCalendarConnected, connectGoogleCalendar, userProfile } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const isAdmin = userProfile?.role === 'admin';
-  const [showPreferences, setShowPreferences] = useState(false);
 
   return (
     <>
@@ -56,15 +53,15 @@ export default function Header() {
               <span className="hidden sm:inline">{isDarkMode ? 'Light' : 'Dark'}</span>
             </button>
 
-            {/* Preferences Button */}
-            <button
-              onClick={() => setShowPreferences(true)}
+            {/* Settings Link */}
+            <Link
+              to="/settings"
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title="Preferences"
+              title="Settings"
             >
               <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Preferences</span>
-            </button>
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
 
             {/* User info & Sign Out */}
             <div className="flex items-center gap-2">
@@ -90,10 +87,6 @@ export default function Header() {
         </div>
       </header>
 
-      <UserPreferencesModal
-        isOpen={showPreferences}
-        onClose={() => setShowPreferences(false)}
-      />
     </>
   );
 }
