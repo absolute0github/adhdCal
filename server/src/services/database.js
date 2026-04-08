@@ -68,6 +68,16 @@ export async function runMigrations() {
       await getPool().execute('ALTER TABLE users ADD COLUMN suspended_at DATETIME NULL DEFAULT NULL');
       console.log('Migration: added suspended_at column to users table');
     }
+
+    // Add stripe_customer_id column for billing
+    const stripeCols = await query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = 'stripe_customer_id'`,
+      [config.db.name]
+    );
+    if (stripeCols.length === 0) {
+      await getPool().execute('ALTER TABLE users ADD COLUMN stripe_customer_id VARCHAR(255) NULL DEFAULT NULL');
+      console.log('Migration: added stripe_customer_id column to users table');
+    }
   } catch (error) {
     console.warn('Migration check failed (non-fatal):', error.message);
   }
@@ -132,6 +142,17 @@ export const userQueries = {
 
   async unsuspend(userId) {
     return update('UPDATE users SET suspended_at = NULL WHERE id = ?', [userId]);
+  },
+
+  async updateStripeCustomer(userId, stripeCustomerId) {
+    return update(
+      'UPDATE users SET stripe_customer_id = ? WHERE id = ?',
+      [stripeCustomerId, userId]
+    );
+  },
+
+  async findByStripeCustomer(stripeCustomerId) {
+    return queryOne('SELECT * FROM users WHERE stripe_customer_id = ?', [stripeCustomerId]);
   }
 };
 

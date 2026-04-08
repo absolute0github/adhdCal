@@ -9,6 +9,7 @@ import taskRoutes from './routes/tasks.js';
 import calendarRoutes from './routes/calendar.js';
 import preferencesRoutes from './routes/preferences.js';
 import adminRoutes from './routes/admin.js';
+import billingRoutes from './routes/billing.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { testConnection, runMigrations } from './services/database.js';
 
@@ -22,6 +23,10 @@ app.use(cors({
   origin: config.clientUrl,
   credentials: true
 }));
+
+// Stripe webhook MUST receive raw body — mount BEFORE express.json()
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 
 // API Routes
@@ -30,6 +35,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Run database migrations
 runMigrations().catch(err => console.warn('Migration runner error:', err.message));

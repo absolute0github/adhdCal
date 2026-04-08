@@ -451,6 +451,7 @@ export default function LandingPage() {
                 <a href="#features" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">Features</a>
                 <a href="#how-it-works" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">How It Works</a>
                 <a href="#testimonials" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">Testimonials</a>
+                <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">Pricing</Link>
                 {isAuthenticated ? (
                   <Link
                     to="/app"

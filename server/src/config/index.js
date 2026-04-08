@@ -32,5 +32,11 @@ export const config = {
     serviceKey: process.env.SUPABASE_SERVICE_KEY
   },
   adminEmail: process.env.ADMIN_EMAIL,
-  dataPath: join(__dirname, '../../data')
+  dataPath: join(__dirname, '../../data'),
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    trialDays: parseInt(process.env.STRIPE_TRIAL_DAYS || '7'),
+  },
+  appUrl: process.env.APP_URL || 'https://adhdcal.top'
 };

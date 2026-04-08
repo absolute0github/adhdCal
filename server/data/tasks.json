@@ -175,6 +175,62 @@
       "scheduledSessions": [],
       "createdAt": "2026-02-23T15:55:47.672Z",
       "updatedAt": "2026-02-23T15:55:47.672Z"
+    },
+    {
+      "id": "a5eb175b-cf31-43d9-aaa3-b726269382d9",
+      "name": "Test reminder task for PR",
+      "estimatedDuration": 10,
+      "sessionPreference": 120,
+      "complexity": 3,
+      "importance": 3,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "825e010c-d6ea-4a35-85d1-eb69a8ca7b88",
+          "calendarEventId": "dri9bhe10dtolm8uhksc044nrg",
+          "startTime": "2026-03-29T19:36:00.721Z",
+          "endTime": "2026-03-29T21:36:00.721Z",
+          "duration": 120,
+          "status": "scheduled",
+          "isOverride": true
+        }
+      ],
+      "createdAt": "2026-03-29T19:36:39.320Z",
+      "updatedAt": "2026-03-29T19:36:39.858Z"
+    },
+    {
+      "id": "c8b44d00-3ada-4802-8bc2-291040d5b70c",
+      "name": "Second Task",
+      "estimatedDuration": 10,
+      "sessionPreference": 120,
+      "complexity": 3,
+      "importance": 3,
+      "status": "scheduled",
+      "scheduledSessions": [
+        {
+          "sessionId": "9efe53ad-2b70-47f7-b779-654236a209fe",
+          "calendarEventId": "rt1935t20l26pguv28engv0j7c",
+          "startTime": "2026-03-29T21:36:00.000Z",
+          "endTime": "2026-03-29T23:36:00.000Z",
+          "duration": 120,
+          "status": "scheduled",
+          "isOverride": true
+        }
+      ],
+      "createdAt": "2026-03-29T19:40:51.984Z",
+      "updatedAt": "2026-03-29T19:40:52.551Z"
+    },
+    {
+      "id": "f1170936-5ee7-4d29-b90e-4af6c611711b",
+      "name": "Quick Test Reminder",
+      "estimatedDuration": 5,
+      "sessionPreference": null,
+      "complexity": 3,
+      "importance": 3,
+      "status": "backlog",
+      "scheduledSessions": [],
+      "createdAt": "2026-03-29T19:47:05.255Z",
+      "updatedAt": "2026-03-29T19:47:05.255Z"
     }
   ]
 }

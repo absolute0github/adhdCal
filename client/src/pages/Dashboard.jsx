@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { List, Columns } from 'lucide-react';
+import { List, Columns, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskList from '../components/tasks/TaskList';
@@ -7,7 +8,7 @@ import KanbanBoard from '../components/tasks/KanbanBoard';
 import ScheduleWizard from '../components/scheduling/ScheduleWizard';
 
 export default function Dashboard() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, userProfile } = useAuth();
   const [schedulingTask, setSchedulingTask] = useState(null);
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem('adhdcal-view-mode') || 'list'
@@ -36,6 +37,24 @@ export default function Dashboard() {
 
       {/* Task Form */}
       <TaskForm onScheduleNew={handleSchedule} />
+
+      {/* Free tier upgrade prompt */}
+      {!isLoading && isAuthenticated && userProfile && !userProfile.isPremium && (
+        <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-indigo-700">
+            <Zap className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+            <span>
+              Free plan · <strong>{userProfile.limits?.maxTasks ?? 25} task limit</strong> · 7-day scheduling window
+            </span>
+          </div>
+          <Link
+            to="/pricing"
+            className="flex-shrink-0 ml-3 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors"
+          >
+            Upgrade →
+          </Link>
+        </div>
+      )}
 
       {/* View Toggle */}
       <div className="flex items-center justify-end gap-1">
