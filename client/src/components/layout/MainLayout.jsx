@@ -2,12 +2,14 @@ import { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
+import OnboardingWizard from '../onboarding/OnboardingWizard';
 
 export default function MainLayout({ children }) {
   const [activeTab, setActiveTab] = useState('tasks');
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
+      <OnboardingWizard />
       <Header />
 
       {/* Desktop layout */}
